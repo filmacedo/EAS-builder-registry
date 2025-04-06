@@ -3,14 +3,78 @@
 import { Metrics } from "@/components/Metrics";
 import { Search } from "@/components/Search";
 import { BuildersTable } from "@/components/BuildersTable";
-import { mockMetrics, mockBuilders } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
+import { getVerificationPartners, getVerifiedBuilders } from "@/services/eas";
+import { useEffect, useState } from "react";
+import { Builder, Partner, Metrics as MetricsType } from "@/types";
 
 export default function Home() {
+  const [builders, setBuilders] = useState<Builder[]>([]);
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [metrics, setMetrics] = useState<MetricsType>({
+    totalBuilders: 0,
+    totalPartners: 0,
+    totalAttestations: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [builderAttestations, partnerAttestations] = await Promise.all([
+          getVerifiedBuilders(),
+          getVerificationPartners(),
+        ]);
+
+        // Process builder attestations
+        const builderMap = new Map<string, Builder>();
+        builderAttestations.forEach((attestation) => {
+          const builder = builderMap.get(attestation.recipient) || {
+            id: attestation.recipient,
+            address: attestation.recipient,
+            attestations: [],
+            totalVerifications: 0,
+          };
+          builder.attestations.push(attestation);
+          builder.totalVerifications++;
+          builderMap.set(attestation.recipient, builder);
+        });
+
+        // Process partner attestations
+        const processedPartners = partnerAttestations.map((attestation) => ({
+          id: attestation.recipient,
+          address: attestation.recipient,
+          name: attestation.decodedData.name,
+          url: attestation.decodedData.url,
+          attestationUID: attestation.id,
+          verifiedBuildersCount: 0, // We'll need to calculate this
+        }));
+
+        setBuilders(Array.from(builderMap.values()));
+        setPartners(processedPartners);
+        setMetrics({
+          totalBuilders: builderMap.size,
+          totalPartners: processedPartners.length,
+          totalAttestations: builderAttestations.length,
+        });
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
+
   const handleSearch = (value: string) => {
     console.log("Searching for:", value);
     // TODO: Implement search functionality
   };
+
+  if (loading) {
+    return <div className="container mx-auto p-4">Loading...</div>;
+  }
 
   return (
     <div className="space-y-8">
@@ -22,7 +86,7 @@ export default function Home() {
         </p>
       </div>
 
-      <Metrics data={mockMetrics} />
+      <Metrics data={metrics} />
 
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold">Find Builders</h2>
@@ -31,7 +95,7 @@ export default function Home() {
 
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold">Verified Builders</h2>
-        <BuildersTable builders={mockBuilders} />
+        <BuildersTable builders={builders} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

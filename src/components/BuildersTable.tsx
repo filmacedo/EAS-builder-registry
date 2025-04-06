@@ -11,31 +11,25 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { getEAScanUrl } from "@/services/eas";
+import Link from "next/link";
 
 interface BuildersTableProps {
   builders: Builder[];
 }
 
 export function BuildersTable({ builders }: BuildersTableProps) {
-  const [sortBy, setSortBy] = useState<keyof Builder>("verificationDate");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [sortBy, setSortBy] = useState<keyof Builder>("address");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const sortedBuilders = [...builders].sort((a, b) => {
-    if (sortBy === "verificationDate") {
-      return sortDirection === "asc"
-        ? new Date(a.verificationDate).getTime() -
-            new Date(b.verificationDate).getTime()
-        : new Date(b.verificationDate).getTime() -
-            new Date(a.verificationDate).getTime();
-    }
-
     if (sortBy === "totalVerifications") {
       return sortDirection === "asc"
         ? a.totalVerifications - b.totalVerifications
         : b.totalVerifications - a.totalVerifications;
     }
 
-    // For string comparisons (address, context)
+    // For string comparisons (address)
     const aValue = a[sortBy] as string;
     const bValue = b[sortBy] as string;
     return sortDirection === "asc"
@@ -71,17 +65,6 @@ export function BuildersTable({ builders }: BuildersTableProps) {
             <TableHead>
               <Button
                 variant="ghost"
-                onClick={() => handleSort("verificationDate")}
-                className="font-semibold"
-              >
-                Verification Date
-                {sortBy === "verificationDate" &&
-                  (sortDirection === "asc" ? " ↑" : " ↓")}
-              </Button>
-            </TableHead>
-            <TableHead>
-              <Button
-                variant="ghost"
                 onClick={() => handleSort("totalVerifications")}
                 className="font-semibold"
               >
@@ -90,28 +73,36 @@ export function BuildersTable({ builders }: BuildersTableProps) {
                   (sortDirection === "asc" ? " ↑" : " ↓")}
               </Button>
             </TableHead>
-            <TableHead>
-              <Button
-                variant="ghost"
-                onClick={() => handleSort("context")}
-                className="font-semibold"
-              >
-                Context
-                {sortBy === "context" &&
-                  (sortDirection === "asc" ? " ↑" : " ↓")}
-              </Button>
-            </TableHead>
+            <TableHead>Attestations</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {sortedBuilders.map((builder) => (
             <TableRow key={builder.id}>
               <TableCell>{builder.ens || builder.address}</TableCell>
-              <TableCell>
-                {new Date(builder.verificationDate).toLocaleDateString()}
-              </TableCell>
               <TableCell>{builder.totalVerifications}</TableCell>
-              <TableCell>{builder.context}</TableCell>
+              <TableCell>
+                <div className="space-y-1">
+                  {builder.attestations.map((attestation) => (
+                    <div
+                      key={attestation.id}
+                      className="flex items-center gap-2"
+                    >
+                      <span className="text-sm text-muted-foreground">
+                        {attestation.decodedData.context}
+                      </span>
+                      <Link
+                        href={getEAScanUrl(attestation.id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary hover:underline"
+                      >
+                        View
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
