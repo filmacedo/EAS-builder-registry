@@ -29,7 +29,13 @@ export function BuildersTable({ builders }: BuildersTableProps) {
         : b.totalVerifications - a.totalVerifications;
     }
 
-    // For string comparisons (address)
+    if (sortBy === "earliestAttestationDate") {
+      return sortDirection === "asc"
+        ? a.earliestAttestationDate - b.earliestAttestationDate
+        : b.earliestAttestationDate - a.earliestAttestationDate;
+    }
+
+    // For string comparisons (address, partner name)
     const aValue = a[sortBy] as string;
     const bValue = b[sortBy] as string;
     return sortDirection === "asc"
@@ -44,6 +50,10 @@ export function BuildersTable({ builders }: BuildersTableProps) {
       setSortBy(column);
       setSortDirection("asc");
     }
+  };
+
+  const formatDate = (timestamp: number) => {
+    return new Date(timestamp * 1000).toLocaleDateString();
   };
 
   return (
@@ -73,7 +83,28 @@ export function BuildersTable({ builders }: BuildersTableProps) {
                   (sortDirection === "asc" ? " ↑" : " ↓")}
               </Button>
             </TableHead>
-            <TableHead>Attestations</TableHead>
+            <TableHead>
+              <Button
+                variant="ghost"
+                onClick={() => handleSort("earliestAttestationDate")}
+                className="font-semibold"
+              >
+                First Verified
+                {sortBy === "earliestAttestationDate" &&
+                  (sortDirection === "asc" ? " ↑" : " ↓")}
+              </Button>
+            </TableHead>
+            <TableHead>
+              <Button
+                variant="ghost"
+                onClick={() => handleSort("earliestPartnerName")}
+                className="font-semibold"
+              >
+                Verified By
+                {sortBy === "earliestPartnerName" &&
+                  (sortDirection === "asc" ? " ↑" : " ↓")}
+              </Button>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -82,26 +113,28 @@ export function BuildersTable({ builders }: BuildersTableProps) {
               <TableCell>{builder.ens || builder.address}</TableCell>
               <TableCell>{builder.totalVerifications}</TableCell>
               <TableCell>
-                <div className="space-y-1">
-                  {builder.attestations.map((attestation) => (
-                    <div
-                      key={attestation.id}
-                      className="flex items-center gap-2"
-                    >
-                      <span className="text-sm text-muted-foreground">
-                        {attestation.decodedData.context}
-                      </span>
-                      <Link
-                        href={getEAScanUrl(attestation.id)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-primary hover:underline"
-                      >
-                        View
-                      </Link>
-                    </div>
-                  ))}
-                </div>
+                <Link
+                  href={getEAScanUrl(builder.earliestAttestationId)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  {formatDate(builder.earliestAttestationDate)}
+                </Link>
+              </TableCell>
+              <TableCell>
+                {builder.earliestPartnerAttestationId ? (
+                  <Link
+                    href={getEAScanUrl(builder.earliestPartnerAttestationId)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    {builder.earliestPartnerName}
+                  </Link>
+                ) : (
+                  builder.earliestPartnerName
+                )}
               </TableCell>
             </TableRow>
           ))}

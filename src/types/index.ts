@@ -22,6 +22,7 @@ export interface VerifiedBuilderAttestation extends EASAttestation {
     isBuilder: boolean;
     context: string;
   };
+  partnerName?: string;
 }
 
 export interface Builder {
@@ -30,6 +31,10 @@ export interface Builder {
   ens?: string;
   attestations: VerifiedBuilderAttestation[];
   totalVerifications: number;
+  earliestAttestationDate: number;
+  earliestAttestationId: string;
+  earliestPartnerName: string;
+  earliestPartnerAttestationId: string;
 }
 
 export interface Partner {

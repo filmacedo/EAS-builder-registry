@@ -19,11 +19,12 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchData() {
+    const fetchData = async () => {
       try {
-        const [builderAttestations, partnerAttestations] = await Promise.all([
-          getVerifiedBuilders(),
+        // Fetch data from EAS
+        const [partnerAttestations, builderAttestations] = await Promise.all([
           getVerificationPartners(),
+          getVerifiedBuilders(),
         ]);
 
         // Process builder attestations
@@ -34,35 +35,51 @@ export default function Home() {
             address: attestation.recipient,
             attestations: [],
             totalVerifications: 0,
+            earliestAttestationDate: attestation.time,
+            earliestAttestationId: attestation.id,
+            earliestPartnerName: attestation.partnerName || "Unknown",
+            earliestPartnerAttestationId: attestation.refUID || "",
           };
           builder.attestations.push(attestation);
           builder.totalVerifications++;
+
+          // Update earliest attestation if this one is earlier
+          if (attestation.time < builder.earliestAttestationDate) {
+            builder.earliestAttestationDate = attestation.time;
+            builder.earliestAttestationId = attestation.id;
+            builder.earliestPartnerName = attestation.partnerName || "Unknown";
+            builder.earliestPartnerAttestationId = attestation.refUID || "";
+          }
+
           builderMap.set(attestation.recipient, builder);
         });
 
         // Process partner attestations
-        const processedPartners = partnerAttestations.map((attestation) => ({
-          id: attestation.recipient,
+        const partners = partnerAttestations.map((attestation) => ({
+          id: attestation.id,
           address: attestation.recipient,
           name: attestation.decodedData.name,
           url: attestation.decodedData.url,
           attestationUID: attestation.id,
-          verifiedBuildersCount: 0, // We'll need to calculate this
+          verifiedBuildersCount: 0,
         }));
 
-        setBuilders(Array.from(builderMap.values()));
-        setPartners(processedPartners);
-        setMetrics({
+        // Update metrics
+        const metrics = {
           totalBuilders: builderMap.size,
-          totalPartners: processedPartners.length,
+          totalPartners: partners.length,
           totalAttestations: builderAttestations.length,
-        });
+        };
+
+        setBuilders(Array.from(builderMap.values()));
+        setPartners(partners);
+        setMetrics(metrics);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
-    }
+    };
 
     fetchData();
   }, []);
@@ -124,11 +141,11 @@ export default function Home() {
           </p>
           <Button asChild>
             <a
-              href="https://notion.so"
+              href="https://forms.gle/1RDxpQj4uHGHrQBF8"
               target="_blank"
               rel="noopener noreferrer"
             >
-              Apply as Partner
+              Apply to be a Verification Partner
             </a>
           </Button>
         </div>
