@@ -5,6 +5,7 @@ import { Search } from "@/components/Search";
 import { BuildersTable } from "@/components/BuildersTable";
 import { Button } from "@/components/ui/button";
 import { getVerificationPartners, getVerifiedBuilders } from "@/services/eas";
+import { resolveAddresses } from "@/services/ens";
 import { useEffect, useState } from "react";
 import { Builder, Partner, Metrics as MetricsType } from "@/types";
 
@@ -30,29 +31,47 @@ export default function Home() {
         // Process builder attestations
         const builderMap = new Map<string, Builder>();
         builderAttestations.forEach((attestation) => {
-          const builder = builderMap.get(attestation.recipient) || {
-            id: attestation.recipient,
-            address: attestation.recipient,
-            attestations: [],
-            totalVerifications: 0,
-            earliestAttestationDate: attestation.time,
-            earliestAttestationId: attestation.id,
-            earliestPartnerName: attestation.partnerName || "Unknown",
-            earliestPartnerAttestationId: attestation.refUID || "",
-          };
-          builder.attestations.push(attestation);
-          builder.totalVerifications++;
-
-          // Update earliest attestation if this one is earlier
-          if (attestation.time < builder.earliestAttestationDate) {
-            builder.earliestAttestationDate = attestation.time;
-            builder.earliestAttestationId = attestation.id;
-            builder.earliestPartnerName = attestation.partnerName || "Unknown";
-            builder.earliestPartnerAttestationId = attestation.refUID || "";
+          const existingBuilder = builderMap.get(attestation.recipient);
+          if (
+            !existingBuilder ||
+            attestation.time < existingBuilder.earliestAttestationDate
+          ) {
+            const partnerAttestation = partnerAttestations.find(
+              (p) => p.id === attestation.refUID
+            );
+            builderMap.set(attestation.recipient, {
+              id: attestation.id,
+              address: attestation.recipient,
+              totalVerifications: 1,
+              earliestAttestationId: attestation.id,
+              earliestAttestationDate: attestation.time,
+              earliestPartnerName: attestation.partnerName || "Unknown",
+              earliestPartnerAttestationId: attestation.refUID,
+              context: attestation.decodedData.context || null,
+              attestations: [attestation],
+            });
+          } else {
+            existingBuilder.totalVerifications++;
           }
-
-          builderMap.set(attestation.recipient, builder);
         });
+
+        // Resolve ENS names for all builders
+        const builderAddresses = Array.from(builderMap.keys());
+        console.log("Resolving ENS for addresses:", builderAddresses);
+        const ensMap = await resolveAddresses(builderAddresses);
+        console.log("ENS resolution results:", Array.from(ensMap.entries()));
+
+        // Update builders with ENS names
+        const buildersWithENS = Array.from(builderMap.values()).map(
+          (builder) => {
+            const ens = ensMap.get(builder.address);
+            console.log("Builder:", builder.address, "ENS:", ens);
+            return {
+              ...builder,
+              ens: ens || undefined,
+            };
+          }
+        );
 
         // Process partner attestations
         const partners = partnerAttestations.map((attestation) => ({
@@ -71,7 +90,7 @@ export default function Home() {
           totalAttestations: builderAttestations.length,
         };
 
-        setBuilders(Array.from(builderMap.values()));
+        setBuilders(buildersWithENS);
         setPartners(partners);
         setMetrics(metrics);
       } catch (error) {

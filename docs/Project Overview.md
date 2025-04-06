@@ -41,7 +41,7 @@
 - Issued by **attestations.talentprotocol.eth** to the **partner's wallet address**
 - Used to validate who has authority to issue verified builder attestations
 - Revocable = true
-- [Verification Partner Live Schema URL](https://sepolia.easscan.org/schema/view/0x0c25f92df9ba914668f7780e428a1b5238ae7441c765fbe8b7b528f8209ef4e3)
+- [Verification Partner Live Schema on Base URL](https://base.easscan.org/schema/view/0x0c25f92df9ba914668f7780e428a1b5238ae7441c765fbe8b7b528f8209ef4e3)
 
 ### Schema B: Verified Builder Attestation
 
@@ -56,7 +56,7 @@
 - No expiration time
 - References "Verification Partner" attestation (UID)
 - Revocable = true
-- [Verified Builder Attestation Live Schema URL](https://sepolia.easscan.org/schema/view/0x597905068aedcde4321ceaf2c42e24d3bbe0af694159bececd686bf057ec7ea5)
+- [Verified Builder Attestation Live Schema on Base URL](https://base.easscan.org/schema/view/0x597905068aedcde4321ceaf2c42e24d3bbe0af694159bececd686bf057ec7ea5)
 
 ## Registry App Implementation
 
@@ -99,7 +99,7 @@
   - Context of verification
   - Verifier (attester address)
   - Date of verification
-  - Direct link to attestation on [EASScan](https://sepolia.easscan.org)
+  - Direct link to attestation on [EASScan](https://base.easscan.org) on Base
 - The app does not to write attestations directly (these will be done through the EAS UI)
 
 #### 3. Partners Page

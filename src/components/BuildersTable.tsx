@@ -35,7 +35,7 @@ export function BuildersTable({ builders }: BuildersTableProps) {
         : b.earliestAttestationDate - a.earliestAttestationDate;
     }
 
-    // For string comparisons (address, partner name)
+    // For string comparisons (address, partner name, context)
     const aValue = a[sortBy] as string;
     const bValue = b[sortBy] as string;
     return sortDirection === "asc"
@@ -54,6 +54,19 @@ export function BuildersTable({ builders }: BuildersTableProps) {
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleDateString();
+  };
+
+  const truncateAddress = (address: string) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  const truncateText = (
+    text: string | undefined | null,
+    maxLength: number = 50
+  ) => {
+    if (!text) return "-";
+    if (text.length <= maxLength) return text;
+    return `${text.slice(0, maxLength)}...`;
   };
 
   return (
@@ -105,12 +118,43 @@ export function BuildersTable({ builders }: BuildersTableProps) {
                   (sortDirection === "asc" ? " ↑" : " ↓")}
               </Button>
             </TableHead>
+            <TableHead>
+              <Button
+                variant="ghost"
+                onClick={() => handleSort("context")}
+                className="font-semibold"
+              >
+                Context
+                {sortBy === "context" &&
+                  (sortDirection === "asc" ? " ↑" : " ↓")}
+              </Button>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {sortedBuilders.map((builder) => (
             <TableRow key={builder.id}>
-              <TableCell>{builder.ens || builder.address}</TableCell>
+              <TableCell>
+                {builder.ens ? (
+                  <Link
+                    href={`https://app.ens.domains/${builder.ens}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    {builder.ens}
+                  </Link>
+                ) : (
+                  <Link
+                    href={`https://etherscan.io/address/${builder.address}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    {truncateAddress(builder.address)}
+                  </Link>
+                )}
+              </TableCell>
               <TableCell>{builder.totalVerifications}</TableCell>
               <TableCell>
                 <Link
@@ -135,6 +179,17 @@ export function BuildersTable({ builders }: BuildersTableProps) {
                 ) : (
                   builder.earliestPartnerName
                 )}
+              </TableCell>
+              <TableCell>
+                <Link
+                  href={getEAScanUrl(builder.earliestAttestationId)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                  title={builder.context}
+                >
+                  {truncateText(builder.context)}
+                </Link>
               </TableCell>
             </TableRow>
           ))}

@@ -34,7 +34,8 @@ export interface Builder {
   earliestAttestationDate: number;
   earliestAttestationId: string;
   earliestPartnerName: string;
-  earliestPartnerAttestationId: string;
+  earliestPartnerAttestationId?: string | null;
+  context: string | null | undefined;
 }
 
 export interface Partner {
