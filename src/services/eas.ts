@@ -24,12 +24,28 @@ eas.connect(provider);
 const partnerSchemaEncoder = new SchemaEncoder("string name,string url");
 const builderSchemaEncoder = new SchemaEncoder("bool isBuilder,string context");
 
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // 1 second
+
+async function fetchWithRetry<T>(
+  fetchFn: () => Promise<T>,
+  retries = MAX_RETRIES
+): Promise<T> {
+  try {
+    return await fetchFn();
+  } catch (error) {
+    if (retries > 0) {
+      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
+      return fetchWithRetry(fetchFn, retries - 1);
+    }
+    throw error;
+  }
+}
+
 export async function getVerificationPartners(): Promise<
   VerificationPartnerAttestation[]
 > {
-  try {
-    // Note: We'll need to implement a custom GraphQL query here
-    // as the EAS SDK doesn't provide a direct method for this
+  return fetchWithRetry(async () => {
     const response = await fetch("https://base.easscan.org/graphql", {
       method: "POST",
       headers: {
@@ -59,6 +75,10 @@ export async function getVerificationPartners(): Promise<
       }),
     });
 
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     const { data } = await response.json();
     return data.attestations.map((attestation: any) => ({
       ...attestation,
@@ -67,16 +87,13 @@ export async function getVerificationPartners(): Promise<
         url: attestation.data.url,
       },
     }));
-  } catch (error) {
-    console.error("Error fetching verification partners:", error);
-    return [];
-  }
+  });
 }
 
 export async function getVerifiedBuilders(): Promise<
   VerifiedBuilderAttestation[]
 > {
-  try {
+  return fetchWithRetry(async () => {
     // First, fetch all partner attestations to build a map
     const partnersResponse = await fetch("https://base.easscan.org/graphql", {
       method: "POST",
@@ -102,38 +119,31 @@ export async function getVerifiedBuilders(): Promise<
       }),
     });
 
+    if (!partnersResponse.ok) {
+      throw new Error(`HTTP error! status: ${partnersResponse.status}`);
+    }
+
     const { data: partnersData } = await partnersResponse.json();
 
     // Create a map of partner attestation UIDs to their names
     const partnerMap = new Map<string, string>();
     partnersData.attestations.forEach((partner: any) => {
       try {
-        // Skip if data is empty or invalid
         if (!partner.data || partner.data === "0x") {
-          console.warn("Skipping partner with empty data:", partner.id);
           return;
         }
 
-        // Decode the data using the schema encoder
         const decodedData = partnerSchemaEncoder.decodeData(partner.data);
-
-        // Get the name from the decoded data
         const name = decodedData.find((d) => d.name === "name")?.value
           .value as string;
 
         if (name) {
           partnerMap.set(partner.id, name);
-          console.log("Mapped partner:", partner.id, "->", name);
-        } else {
-          console.warn("Partner data missing name:", partner.id, decodedData);
         }
       } catch (error) {
-        console.error("Error decoding partner data:", error, partner);
+        // Skip invalid partner data
       }
     });
-
-    console.log("Partner map size:", partnerMap.size);
-    console.log("Partner map entries:", Array.from(partnerMap.entries()));
 
     // Then fetch builder attestations
     const response = await fetch("https://base.easscan.org/graphql", {
@@ -165,49 +175,32 @@ export async function getVerifiedBuilders(): Promise<
       }),
     });
 
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     const { data } = await response.json();
 
-    // Filter out non-builder attestations and map the data
     return data.attestations
       .map((attestation: any) => {
         try {
-          // Skip if data is empty or invalid
           if (!attestation.data || attestation.data === "0x") {
-            console.warn(
-              "Skipping attestation with empty data:",
-              attestation.id
-            );
             return null;
           }
 
-          // Decode the data using the schema encoder
           const decodedData = builderSchemaEncoder.decodeData(attestation.data);
-
-          // Convert the decoded data to our expected format
           const isBuilder = decodedData.find((d) => d.name === "isBuilder")
             ?.value.value as boolean;
           const context = decodedData.find((d) => d.name === "context")?.value
             .value as string;
 
           if (isBuilder === undefined || context === undefined) {
-            console.warn(
-              "Invalid decoded data for attestation:",
-              attestation.id
-            );
             return null;
           }
 
-          // Get partner name from the map
           const partnerName = attestation.refUID
             ? partnerMap.get(attestation.refUID)
             : "Unknown";
-
-          console.log("Builder attestation:", {
-            id: attestation.id,
-            refUID: attestation.refUID,
-            partnerName,
-            partnerMapSize: partnerMap.size,
-          });
 
           return {
             ...attestation,
@@ -218,7 +211,6 @@ export async function getVerifiedBuilders(): Promise<
             partnerName,
           };
         } catch (error) {
-          console.error("Error decoding attestation data:", error, attestation);
           return null;
         }
       })
@@ -229,10 +221,7 @@ export async function getVerifiedBuilders(): Promise<
           return attestation !== null && attestation.decodedData.isBuilder;
         }
       );
-  } catch (error) {
-    console.error("Error fetching verified builders:", error);
-    return [];
-  }
+  });
 }
 
 export function getEAScanUrl(uid: string): string {

@@ -5,96 +5,50 @@ import { Search } from "@/components/Search";
 import { BuildersTable } from "@/components/BuildersTable";
 import { Button } from "@/components/ui/button";
 import { getVerificationPartners, getVerifiedBuilders } from "@/services/eas";
-import { resolveAddresses } from "@/services/ens";
+import { processBuilderData } from "@/services/builders";
 import { useEffect, useState } from "react";
-import { Builder, Partner, Metrics as MetricsType } from "@/types";
+import {
+  ProcessedBuilder,
+  ProcessedPartner,
+  ProcessedMetrics,
+} from "@/services/builders";
 
 export default function Home() {
-  const [builders, setBuilders] = useState<Builder[]>([]);
-  const [partners, setPartners] = useState<Partner[]>([]);
-  const [metrics, setMetrics] = useState<MetricsType>({
+  const [builders, setBuilders] = useState<ProcessedBuilder[]>([]);
+  const [partners, setPartners] = useState<ProcessedPartner[]>([]);
+  const [metrics, setMetrics] = useState<ProcessedMetrics>({
     totalBuilders: 0,
     totalPartners: 0,
     totalAttestations: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setError(null);
         // Fetch data from EAS
         const [partnerAttestations, builderAttestations] = await Promise.all([
           getVerificationPartners(),
           getVerifiedBuilders(),
         ]);
 
-        // Process builder attestations
-        const builderMap = new Map<string, Builder>();
-        builderAttestations.forEach((attestation) => {
-          const existingBuilder = builderMap.get(attestation.recipient);
-          if (
-            !existingBuilder ||
-            attestation.time < existingBuilder.earliestAttestationDate
-          ) {
-            const partnerAttestation = partnerAttestations.find(
-              (p) => p.id === attestation.refUID
-            );
-            builderMap.set(attestation.recipient, {
-              id: attestation.id,
-              address: attestation.recipient,
-              totalVerifications: 1,
-              earliestAttestationId: attestation.id,
-              earliestAttestationDate: attestation.time,
-              earliestPartnerName: attestation.partnerName || "Unknown",
-              earliestPartnerAttestationId: attestation.refUID,
-              context: attestation.decodedData.context || null,
-              attestations: [attestation],
-            });
-          } else {
-            existingBuilder.totalVerifications++;
-          }
-        });
-
-        // Resolve ENS names for all builders
-        const builderAddresses = Array.from(builderMap.keys());
-        console.log("Resolving ENS for addresses:", builderAddresses);
-        const ensMap = await resolveAddresses(builderAddresses);
-        console.log("ENS resolution results:", Array.from(ensMap.entries()));
-
-        // Update builders with ENS names
-        const buildersWithENS = Array.from(builderMap.values()).map(
-          (builder) => {
-            const ens = ensMap.get(builder.address);
-            console.log("Builder:", builder.address, "ENS:", ens);
-            return {
-              ...builder,
-              ens: ens || undefined,
-            };
-          }
+        // Process the data
+        const { builders, partners, metrics } = await processBuilderData(
+          builderAttestations,
+          partnerAttestations
         );
 
-        // Process partner attestations
-        const partners = partnerAttestations.map((attestation) => ({
-          id: attestation.id,
-          address: attestation.recipient,
-          name: attestation.decodedData.name,
-          url: attestation.decodedData.url,
-          attestationUID: attestation.id,
-          verifiedBuildersCount: 0,
-        }));
-
-        // Update metrics
-        const metrics = {
-          totalBuilders: builderMap.size,
-          totalPartners: partners.length,
-          totalAttestations: builderAttestations.length,
-        };
-
-        setBuilders(buildersWithENS);
+        setBuilders(builders);
         setPartners(partners);
         setMetrics(metrics);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        setError(
+          error instanceof Error
+            ? error.message
+            : "An error occurred while fetching data"
+        );
       } finally {
         setLoading(false);
       }
@@ -104,12 +58,25 @@ export default function Home() {
   }, []);
 
   const handleSearch = (value: string) => {
-    console.log("Searching for:", value);
     // TODO: Implement search functionality
   };
 
   if (loading) {
     return <div className="container mx-auto p-4">Loading...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-4">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
+          <h2 className="text-xl font-semibold">Error</h2>
+          <p>{error}</p>
+          <Button className="mt-4" onClick={() => window.location.reload()}>
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (

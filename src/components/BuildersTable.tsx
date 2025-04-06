@@ -1,6 +1,5 @@
 "use client";
 
-import { Builder } from "@/types";
 import {
   Table,
   TableBody,
@@ -9,126 +8,65 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+import { ArrowUpDown } from "lucide-react";
+import { ProcessedBuilder } from "@/services/builders";
 import { useState } from "react";
-import { getEAScanUrl } from "@/services/eas";
+import { truncateText, truncateAddress } from "@/lib/utils";
 import Link from "next/link";
 
 interface BuildersTableProps {
-  builders: Builder[];
+  builders: ProcessedBuilder[];
 }
 
+type SortField = "totalVerifications" | "earliestAttestationDate";
+type SortOrder = "asc" | "desc";
+
 export function BuildersTable({ builders }: BuildersTableProps) {
-  const [sortBy, setSortBy] = useState<keyof Builder>("address");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [sortField, setSortField] = useState<SortField>("totalVerifications");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortOrder("desc");
+    }
+  };
 
   const sortedBuilders = [...builders].sort((a, b) => {
-    if (sortBy === "totalVerifications") {
-      return sortDirection === "asc"
-        ? a.totalVerifications - b.totalVerifications
-        : b.totalVerifications - a.totalVerifications;
-    }
-
-    if (sortBy === "earliestAttestationDate") {
-      return sortDirection === "asc"
-        ? a.earliestAttestationDate - b.earliestAttestationDate
-        : b.earliestAttestationDate - a.earliestAttestationDate;
-    }
-
-    // For string comparisons (address, partner name, context)
-    const aValue = a[sortBy] as string;
-    const bValue = b[sortBy] as string;
-    return sortDirection === "asc"
-      ? aValue.localeCompare(bValue)
-      : bValue.localeCompare(aValue);
+    const aValue = a[sortField];
+    const bValue = b[sortField];
+    const multiplier = sortOrder === "asc" ? 1 : -1;
+    return (aValue > bValue ? 1 : -1) * multiplier;
   });
-
-  const handleSort = (column: keyof Builder) => {
-    if (sortBy === column) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(column);
-      setSortDirection("asc");
-    }
-  };
-
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp * 1000).toLocaleDateString();
-  };
-
-  const truncateAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
-
-  const truncateText = (
-    text: string | undefined | null,
-    maxLength: number = 50
-  ) => {
-    if (!text) return "-";
-    if (text.length <= maxLength) return text;
-    return `${text.slice(0, maxLength)}...`;
-  };
 
   return (
     <div className="rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>
-              <Button
-                variant="ghost"
-                onClick={() => handleSort("address")}
-                className="font-semibold"
-              >
-                Address
-                {sortBy === "address" &&
-                  (sortDirection === "asc" ? " ↑" : " ↓")}
-              </Button>
-            </TableHead>
-            <TableHead>
-              <Button
-                variant="ghost"
-                onClick={() => handleSort("totalVerifications")}
-                className="font-semibold"
-              >
+            <TableHead>Address</TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("totalVerifications")}
+            >
+              <div className="flex items-center">
                 Verifications
-                {sortBy === "totalVerifications" &&
-                  (sortDirection === "asc" ? " ↑" : " ↓")}
-              </Button>
+                <ArrowUpDown className="ml-2 h-4 w-4" />
+              </div>
             </TableHead>
-            <TableHead>
-              <Button
-                variant="ghost"
-                onClick={() => handleSort("earliestAttestationDate")}
-                className="font-semibold"
-              >
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("earliestAttestationDate")}
+            >
+              <div className="flex items-center">
                 First Verified
-                {sortBy === "earliestAttestationDate" &&
-                  (sortDirection === "asc" ? " ↑" : " ↓")}
-              </Button>
+                <ArrowUpDown className="ml-2 h-4 w-4" />
+              </div>
             </TableHead>
-            <TableHead>
-              <Button
-                variant="ghost"
-                onClick={() => handleSort("earliestPartnerName")}
-                className="font-semibold"
-              >
-                Verified By
-                {sortBy === "earliestPartnerName" &&
-                  (sortDirection === "asc" ? " ↑" : " ↓")}
-              </Button>
-            </TableHead>
-            <TableHead>
-              <Button
-                variant="ghost"
-                onClick={() => handleSort("context")}
-                className="font-semibold"
-              >
-                Context
-                {sortBy === "context" &&
-                  (sortDirection === "asc" ? " ↑" : " ↓")}
-              </Button>
-            </TableHead>
+            <TableHead>Verified By</TableHead>
+            <TableHead>Context</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -158,18 +96,20 @@ export function BuildersTable({ builders }: BuildersTableProps) {
               <TableCell>{builder.totalVerifications}</TableCell>
               <TableCell>
                 <Link
-                  href={getEAScanUrl(builder.earliestAttestationId)}
+                  href={`https://base.easscan.org/attestation/view/${builder.earliestAttestationId}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
-                  {formatDate(builder.earliestAttestationDate)}
+                  {new Date(
+                    builder.earliestAttestationDate * 1000
+                  ).toLocaleDateString()}
                 </Link>
               </TableCell>
               <TableCell>
                 {builder.earliestPartnerAttestationId ? (
                   <Link
-                    href={getEAScanUrl(builder.earliestPartnerAttestationId)}
+                    href={`https://base.easscan.org/attestation/view/${builder.earliestPartnerAttestationId}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary hover:underline"
@@ -182,13 +122,12 @@ export function BuildersTable({ builders }: BuildersTableProps) {
               </TableCell>
               <TableCell>
                 <Link
-                  href={getEAScanUrl(builder.earliestAttestationId)}
+                  href={`https://base.easscan.org/attestation/view/${builder.earliestAttestationId}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
-                  title={builder.context}
                 >
-                  {truncateText(builder.context)}
+                  {truncateText(builder.context || "", 50)}
                 </Link>
               </TableCell>
             </TableRow>
