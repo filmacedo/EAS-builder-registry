@@ -15,6 +15,9 @@ import {
 
 export default function Home() {
   const [builders, setBuilders] = useState<ProcessedBuilder[]>([]);
+  const [filteredBuilders, setFilteredBuilders] = useState<ProcessedBuilder[]>(
+    []
+  );
   const [partners, setPartners] = useState<ProcessedPartner[]>([]);
   const [metrics, setMetrics] = useState<ProcessedMetrics>({
     totalBuilders: 0,
@@ -41,6 +44,7 @@ export default function Home() {
         );
 
         setBuilders(builders);
+        setFilteredBuilders(builders);
         setPartners(partners);
         setMetrics(metrics);
       } catch (error) {
@@ -58,7 +62,19 @@ export default function Home() {
   }, []);
 
   const handleSearch = (value: string) => {
-    // TODO: Implement search functionality
+    const searchTerm = value.toLowerCase();
+    const filtered = builders.filter((builder) => {
+      // Check ENS name if available
+      if (builder.ens && builder.ens.toLowerCase().includes(searchTerm)) {
+        return true;
+      }
+      // Check wallet address
+      if (builder.address.toLowerCase().includes(searchTerm)) {
+        return true;
+      }
+      return false;
+    });
+    setFilteredBuilders(filtered);
   };
 
   if (loading) {
@@ -98,7 +114,7 @@ export default function Home() {
 
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold">Verified Builders</h2>
-        <BuildersTable builders={builders} />
+        <BuildersTable builders={filteredBuilders} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

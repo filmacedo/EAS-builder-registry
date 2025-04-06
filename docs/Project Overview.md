@@ -82,7 +82,7 @@
 
 - Build UI with mock data
 - Show aggregated metrics: Verified Builders, Verification Partners, Total Attestations
-- Builder table with: Address, Verification date, Total verifications
+- Builder table with (in this order): Address, Verifications, First Verified, Verified By, Context
 - Search bar to search for builder wallet address or ENS
 - CTA for builders to create Talent Protocol profiles
 - CTA for for organizations to apply to become new verification partners through a Notion form
@@ -100,6 +100,8 @@
   - Verifier (attester address)
   - Date of verification
   - Direct link to attestation on [EASScan](https://base.easscan.org) on Base
+    - “Verified By” should link to the corresponding Verification Partner attestation.
+    - “First Verified” and “Context” should both link to the corresponding Builder attestation.
 - The app does not to write attestations directly (these will be done through the EAS UI)
 
 #### 3. Partners Page
@@ -107,9 +109,10 @@
 - Partners leaderboard showing attestation counts
 - Visual highlight for partners with 50+ attestations
 - Step-by-step guide for partners to verify builders on EAS
-  - partners need to issue attestations directly on the EAS UI: https://base.easscan.org/attestation/create
-  - dropdown to select partner → show partner attestation UID and a shortcut to copy
-  - attestation needs to be onchain and don't forget isBuilder = true
+  - partners need to issue attestations directly on the EAS UI: https://base.easscan.org/attestation/attestWithSchema/0x597905068aedcde4321ceaf2c42e24d3bbe0af694159bececd686bf057ec7ea5
+  - dropdown to select partner → show partner attestation UID and a shortcut to copy the UID
+  - remind user to open "Advanced Options" and add the Referenced Attestation UID on the EAS UI
+  - remind user to make sure the toggle for isBuilder is True and the the final toggle is "Onchain", not "Offchain" (the default will be False and Offchain, so this is important)
 - The app does not include any authentication or partner dashboards.
 
 #### 4. Backend Implementation
