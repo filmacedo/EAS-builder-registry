@@ -37,7 +37,6 @@ const BuilderTableRow = memo(({ builder }: { builder: ProcessedBuilder }) => (
         </Link>
       )}
     </td>
-    <td className="p-4">{builder.totalVerifications}</td>
     <td className="p-4">
       <Link
         href={`https://base.easscan.org/attestation/view/${builder.earliestAttestationId}`}
@@ -72,6 +71,7 @@ const BuilderTableRow = memo(({ builder }: { builder: ProcessedBuilder }) => (
         {truncateText(builder.context || "", 50)}
       </Link>
     </td>
+    <td className="p-4">{builder.totalVerifications}</td>
   </tr>
 ));
 
@@ -114,15 +114,6 @@ export function BuildersTable({ builders }: BuildersTableProps) {
               </th>
               <th
                 className="h-12 px-4 text-left align-middle font-medium cursor-pointer"
-                onClick={() => handleSort("totalVerifications")}
-              >
-                <div className="flex items-center">
-                  Verifications
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </div>
-              </th>
-              <th
-                className="h-12 px-4 text-left align-middle font-medium cursor-pointer"
                 onClick={() => handleSort("earliestAttestationDate")}
               >
                 <div className="flex items-center">
@@ -135,6 +126,15 @@ export function BuildersTable({ builders }: BuildersTableProps) {
               </th>
               <th className="h-12 px-4 text-left align-middle font-medium">
                 Context
+              </th>
+              <th
+                className="h-12 px-4 text-left align-middle font-medium cursor-pointer"
+                onClick={() => handleSort("totalVerifications")}
+              >
+                <div className="flex items-center">
+                  Total Verifications
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </div>
               </th>
             </tr>
           </thead>

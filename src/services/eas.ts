@@ -42,44 +42,46 @@ async function fetchWithRetry<T>(
   }
 }
 
+async function fetchFromEAS(query: string) {
+  const response = await fetch("/api/eas", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ query }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  return response.json();
+}
+
 export async function getVerificationPartners(): Promise<
   VerificationPartnerAttestation[]
 > {
   return fetchWithRetry(async () => {
-    const response = await fetch("https://base.easscan.org/graphql", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        query: `
-          query GetPartnerAttestations {
-            attestations(
-              where: {
-                schemaId: { equals: "${PARTNER_SCHEMA_UID}" }
-                revoked: { equals: false }
-              }
-            ) {
-              id
-              attester
-              recipient
-              refUID
-              revocationTime
-              expirationTime
-              time
-              txid
-              data
-            }
+    const { data } = await fetchFromEAS(`
+      query GetPartnerAttestations {
+        attestations(
+          where: {
+            schemaId: { equals: "${PARTNER_SCHEMA_UID}" }
+            revoked: { equals: false }
           }
-        `,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const { data } = await response.json();
+        ) {
+          id
+          attester
+          recipient
+          refUID
+          revocationTime
+          expirationTime
+          time
+          txid
+          data
+        }
+      }
+    `);
 
     return data.attestations.map((attestation: any) => {
       try {
@@ -119,35 +121,21 @@ export async function getVerifiedBuilders(): Promise<
 > {
   return fetchWithRetry(async () => {
     // First, fetch all partner attestations to build a map
-    const partnersResponse = await fetch("https://base.easscan.org/graphql", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        query: `
-          query GetPartnerAttestations {
-            attestations(
-              where: {
-                schemaId: { equals: "${PARTNER_SCHEMA_UID}" }
-                revoked: { equals: false }
-              }
-            ) {
-              id
-              attester
-              recipient
-              data
-            }
+    const { data: partnersData } = await fetchFromEAS(`
+      query GetPartnerAttestations {
+        attestations(
+          where: {
+            schemaId: { equals: "${PARTNER_SCHEMA_UID}" }
+            revoked: { equals: false }
           }
-        `,
-      }),
-    });
-
-    if (!partnersResponse.ok) {
-      throw new Error(`HTTP error! status: ${partnersResponse.status}`);
-    }
-
-    const { data: partnersData } = await partnersResponse.json();
+        ) {
+          id
+          attester
+          recipient
+          data
+        }
+      }
+    `);
 
     // Create a map of partner attestation UIDs to their names
     const partnerMap = new Map<string, string>();
@@ -170,41 +158,27 @@ export async function getVerifiedBuilders(): Promise<
     });
 
     // Then fetch builder attestations with pagination
-    const response = await fetch("https://base.easscan.org/graphql", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        query: `
-          query GetBuilderAttestations {
-            attestations(
-              where: {
-                schemaId: { equals: "${BUILDER_SCHEMA_UID}" }
-                revoked: { equals: false }
-              }
-              take: 1000
-            ) {
-              id
-              attester
-              recipient
-              refUID
-              revocationTime
-              expirationTime
-              time
-              txid
-              data
-            }
+    const { data } = await fetchFromEAS(`
+      query GetBuilderAttestations {
+        attestations(
+          where: {
+            schemaId: { equals: "${BUILDER_SCHEMA_UID}" }
+            revoked: { equals: false }
           }
-        `,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const { data } = await response.json();
+          take: 1000
+        ) {
+          id
+          attester
+          recipient
+          refUID
+          revocationTime
+          expirationTime
+          time
+          txid
+          data
+        }
+      }
+    `);
 
     return data.attestations
       .map((attestation: any) => {

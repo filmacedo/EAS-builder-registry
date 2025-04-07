@@ -1,40 +1,63 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { debounce } from "@/lib/utils";
-import { useCallback, useMemo } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useCallback, useEffect, useState } from "react";
+import debounce from "lodash.debounce";
 
 interface SearchProps {
-  placeholder?: string;
   onSearch: (value: string) => void;
+  onPartnerFilter: (partnerId: string | null) => void;
+  partners: { id: string; name: string }[];
 }
 
-export function Search({
-  placeholder = "Search by address or ENS...",
-  onSearch,
-}: SearchProps) {
-  // Memoize the debounced search function
-  const debouncedSearch = useMemo(
-    () => debounce((value: string) => onSearch(value), 300),
+export function Search({ onSearch, onPartnerFilter, partners }: SearchProps) {
+  const [value, setValue] = useState("");
+
+  const debouncedSearch = useCallback(
+    debounce((searchTerm: string) => {
+      onSearch(searchTerm);
+    }, 300),
     [onSearch]
   );
 
-  // Memoize the onChange handler
-  const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      debouncedSearch(e.target.value);
-    },
-    [debouncedSearch]
-  );
+  useEffect(() => {
+    debouncedSearch(value);
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [value, debouncedSearch]);
 
   return (
-    <div className="w-full max-w-md">
-      <Input
-        type="search"
-        placeholder={placeholder}
-        onChange={handleChange}
-        className="w-full"
-      />
+    <div className="flex gap-4">
+      <div className="flex-1">
+        <Input
+          type="search"
+          placeholder="Search by address or ENS..."
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          className="max-w-xl"
+        />
+      </div>
+      <Select onValueChange={(value) => onPartnerFilter(value || null)}>
+        <SelectTrigger className="w-[200px]">
+          <SelectValue placeholder="Verified By" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Partners</SelectItem>
+          {partners.map((partner) => (
+            <SelectItem key={partner.id} value={partner.id}>
+              {partner.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }

@@ -26,6 +26,10 @@ export default function Home() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedPartnerId, setSelectedPartnerId] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,20 +65,44 @@ export default function Home() {
     fetchData();
   }, []);
 
-  const handleSearch = (value: string) => {
-    const searchTerm = value.toLowerCase();
-    const filtered = builders.filter((builder) => {
-      // Check ENS name if available
-      if (builder.ens && builder.ens.toLowerCase().includes(searchTerm)) {
-        return true;
-      }
-      // Check wallet address
-      if (builder.address.toLowerCase().includes(searchTerm)) {
-        return true;
-      }
-      return false;
-    });
+  // Filter builders based on search term and selected partner
+  useEffect(() => {
+    let filtered = builders;
+
+    // Apply search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter((builder) => {
+        // Check ENS name if available
+        if (builder.ens && builder.ens.toLowerCase().includes(term)) {
+          return true;
+        }
+        // Check wallet address
+        if (builder.address.toLowerCase().includes(term)) {
+          return true;
+        }
+        return false;
+      });
+    }
+
+    // Apply partner filter
+    if (selectedPartnerId && selectedPartnerId !== "all") {
+      filtered = filtered.filter((builder) =>
+        builder.attestations.some(
+          (attestation) => attestation.refUID === selectedPartnerId
+        )
+      );
+    }
+
     setFilteredBuilders(filtered);
+  }, [builders, searchTerm, selectedPartnerId]);
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+  };
+
+  const handlePartnerFilter = (partnerId: string | null) => {
+    setSelectedPartnerId(partnerId);
   };
 
   if (loading) {
@@ -109,7 +137,14 @@ export default function Home() {
 
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold">Find Builders</h2>
-        <Search onSearch={handleSearch} />
+        <Search
+          onSearch={handleSearch}
+          onPartnerFilter={handlePartnerFilter}
+          partners={partners.map((p) => ({
+            id: p.attestationUID,
+            name: p.name,
+          }))}
+        />
       </div>
 
       <div className="space-y-4">

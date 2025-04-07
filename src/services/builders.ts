@@ -40,9 +40,20 @@ export async function processBuilderData(
   partners: ProcessedPartner[];
   metrics: ProcessedMetrics;
 }> {
+  // Create a map to count builders per partner
+  const partnerBuilderCounts = new Map<string, Set<string>>();
+
   // Process builder attestations
   const builderMap = new Map<string, ProcessedBuilder>();
   builderAttestations.forEach((attestation) => {
+    // Track unique builders per partner
+    if (attestation.refUID) {
+      const builders =
+        partnerBuilderCounts.get(attestation.refUID) || new Set();
+      builders.add(attestation.recipient);
+      partnerBuilderCounts.set(attestation.refUID, builders);
+    }
+
     const existingBuilder = builderMap.get(attestation.recipient);
     if (
       !existingBuilder ||
@@ -61,6 +72,7 @@ export async function processBuilderData(
       });
     } else {
       existingBuilder.totalVerifications++;
+      existingBuilder.attestations.push(attestation);
     }
   });
 
@@ -75,14 +87,17 @@ export async function processBuilderData(
   }));
 
   // Process partner attestations
-  const partners = partnerAttestations.map((attestation) => ({
-    id: attestation.id,
-    address: attestation.recipient,
-    name: attestation.decodedData.name,
-    url: attestation.decodedData.url,
-    attestationUID: attestation.id,
-    verifiedBuildersCount: 0,
-  }));
+  const partners = partnerAttestations
+    .filter((attestation) => attestation.decodedData !== null)
+    .map((attestation) => ({
+      id: attestation.id,
+      address: attestation.recipient,
+      name: attestation.decodedData!.name,
+      url: attestation.decodedData!.url,
+      attestationUID: attestation.id,
+      verifiedBuildersCount:
+        partnerBuilderCounts.get(attestation.id)?.size || 0,
+    }));
 
   // Update metrics
   const metrics = {
