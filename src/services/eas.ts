@@ -4,6 +4,7 @@ import {
   VerificationPartnerAttestation,
   VerifiedBuilderAttestation,
 } from "@/types";
+import { resolveAddresses } from "./ens";
 
 const EAS_CONTRACT_ADDRESS = "0xC2679fBD37d54388Ce493F1DB75320D236e1815e"; // Base Mainnet
 const PARTNER_SCHEMA_UID =
@@ -83,7 +84,8 @@ export async function getVerificationPartners(): Promise<
       }
     `);
 
-    return data.attestations.map((attestation: any) => {
+    // First decode the attestations
+    const decodedAttestations = data.attestations.map((attestation: any) => {
       try {
         if (!attestation.data || attestation.data === "0x") {
           return {
@@ -113,6 +115,26 @@ export async function getVerificationPartners(): Promise<
         };
       }
     });
+
+    // Then resolve ENS names for all partners
+    const partnerAddresses = decodedAttestations
+      .filter((a: VerificationPartnerAttestation) => a.decodedData !== null)
+      .map((a: VerificationPartnerAttestation) => a.recipient);
+    const ensMap = await resolveAddresses(partnerAddresses);
+
+    // Finally, add ENS names to the decoded attestations
+    return decodedAttestations.map(
+      (attestation: VerificationPartnerAttestation) => {
+        if (!attestation.decodedData) return attestation;
+        return {
+          ...attestation,
+          decodedData: {
+            ...attestation.decodedData,
+            ens: ensMap.get(attestation.recipient),
+          },
+        };
+      }
+    );
   });
 }
 

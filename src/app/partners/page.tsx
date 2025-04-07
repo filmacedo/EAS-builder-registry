@@ -5,6 +5,7 @@ import { PartnersTable } from "@/components/PartnersTable";
 import { getVerificationPartners, getVerifiedBuilders } from "@/services/eas";
 import { resolveAddresses } from "@/services/ens";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 interface Partner {
   id: string;
@@ -113,6 +114,20 @@ export default function PartnersPage() {
           Organizations that verify genuine onchain builders through
           attestations.
         </p>
+      </div>
+
+      <div className="rounded-lg border-l-4 border-l-blue-500 bg-blue-50 p-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h3 className="font-medium">Are you a verification partner?</h3>
+            <p className="text-sm text-muted-foreground">
+              Learn how to verify builders using our step-by-step guide.
+            </p>
+          </div>
+          <Link href="/partners/guide">
+            <Button>View Guide</Button>
+          </Link>
+        </div>
       </div>
 
       <div className="space-y-4">

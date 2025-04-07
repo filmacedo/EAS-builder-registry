@@ -10,10 +10,14 @@ export interface EASAttestation {
   data: string;
 }
 
-export interface VerificationPartnerAttestation extends EASAttestation {
+export interface VerificationPartnerAttestation {
+  id: string;
+  recipient: string;
+  time: number;
   decodedData: {
     name: string;
     url: string;
+    ens?: string;
   } | null;
 }
 
