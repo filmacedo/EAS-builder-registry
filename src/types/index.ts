@@ -14,7 +14,7 @@ export interface VerificationPartnerAttestation extends EASAttestation {
   decodedData: {
     name: string;
     url: string;
-  };
+  } | null;
 }
 
 export interface VerifiedBuilderAttestation extends EASAttestation {

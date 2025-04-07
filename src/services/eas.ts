@@ -5,7 +5,7 @@ import {
   VerifiedBuilderAttestation,
 } from "@/types";
 
-const EAS_CONTRACT_ADDRESS = "0x4200000000000000000000000000000000000021"; // Base Mainnet
+const EAS_CONTRACT_ADDRESS = "0xC2679fBD37d54388Ce493F1DB75320D236e1815e"; // Base Mainnet
 const PARTNER_SCHEMA_UID =
   "0x0c25f92df9ba914668f7780e428a1b5238ae7441c765fbe8b7b528f8209ef4e3";
 const BUILDER_SCHEMA_UID =
@@ -80,13 +80,37 @@ export async function getVerificationPartners(): Promise<
     }
 
     const { data } = await response.json();
-    return data.attestations.map((attestation: any) => ({
-      ...attestation,
-      decodedData: {
-        name: attestation.data.name,
-        url: attestation.data.url,
-      },
-    }));
+
+    return data.attestations.map((attestation: any) => {
+      try {
+        if (!attestation.data || attestation.data === "0x") {
+          return {
+            ...attestation,
+            decodedData: null,
+          };
+        }
+
+        const decodedData = partnerSchemaEncoder.decodeData(attestation.data);
+        const name = decodedData.find((d) => d.name === "name")?.value
+          .value as string;
+        const url = decodedData.find((d) => d.name === "url")?.value
+          .value as string;
+
+        return {
+          ...attestation,
+          decodedData: {
+            name,
+            url,
+          },
+        };
+      } catch (error) {
+        console.error("Error decoding partner data:", error);
+        return {
+          ...attestation,
+          decodedData: null,
+        };
+      }
+    });
   });
 }
 
@@ -145,7 +169,7 @@ export async function getVerifiedBuilders(): Promise<
       }
     });
 
-    // Then fetch builder attestations
+    // Then fetch builder attestations with pagination
     const response = await fetch("https://base.easscan.org/graphql", {
       method: "POST",
       headers: {
@@ -159,6 +183,7 @@ export async function getVerifiedBuilders(): Promise<
                 schemaId: { equals: "${BUILDER_SCHEMA_UID}" }
                 revoked: { equals: false }
               }
+              take: 1000
             ) {
               id
               attester
