@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import { getVerificationPartners } from "@/services/eas";
 import { VerificationPartnerAttestation } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
+import Image from "next/image";
 
 const BUILDER_SCHEMA_UID =
   "0x597905068aedcde4321ceaf2c42e24d3bbe0af694159bececd686bf057ec7ea5";
@@ -94,17 +95,14 @@ export default function VerificationGuidePage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
-        <h1 className="text-3xl font-bold">How to Verify Builders</h1>
+        <h1 className="text-3xl font-bold">Verification Guide</h1>
       </div>
 
       <div className="prose prose-slate max-w-none">
         <div className="rounded-lg border p-6 space-y-4">
-          <h2 className="text-xl font-semibold m-0">
-            Select Your Organization
-          </h2>
+          <h2 className="text-xl font-semibold m-0">Verification Partner</h2>
           <p className="text-muted-foreground">
-            Choose your organization to get specific instructions for verifying
-            builders.
+            Select your organization to view a custom step-by-step guide.
           </p>
           <Select
             onValueChange={(value) => {
@@ -113,7 +111,7 @@ export default function VerificationGuidePage() {
             }}
           >
             <SelectTrigger className="w-[300px]">
-              <SelectValue placeholder="Select a partner" />
+              <SelectValue placeholder="Choose organization" />
             </SelectTrigger>
             <SelectContent>
               {partners.map((partner) => (
@@ -129,44 +127,57 @@ export default function VerificationGuidePage() {
           <div className="mt-8 space-y-6">
             <div className="rounded-lg border p-6 space-y-4">
               <h2 className="text-xl font-semibold">Step 1: Access EAS</h2>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <span className="font-medium">1.1</span>
-                    <span>Visit the EAS attestation page on Base network</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="font-medium">1.2</span>
-                    <span>
-                      Connect your wallet using the following approved address:
-                    </span>
-                  </div>
-                  <div className="bg-muted rounded-lg p-4 space-y-2 ml-6">
-                    <p className="text-sm font-medium">
-                      Approved Wallet Address
-                    </p>
-                    <div className="space-y-1 font-mono">
-                      {selectedPartner.ens && (
-                        <div className="text-sm">{selectedPartner.ens}</div>
-                      )}
-                      <div className="text-sm text-muted-foreground">
-                        {truncateAddress(selectedPartner.address)}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="relative aspect-video rounded-lg overflow-hidden border bg-muted">
+                  <Image
+                    src="/images/guide/step1-eas-access.gif"
+                    alt="Accessing EAS and connecting wallet"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <span className="font-medium">1.1</span>
+                      <span>
+                        Visit the EAS attestation page on Base network
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="font-medium">1.2</span>
+                      <span>
+                        Connect your wallet using the following approved
+                        address:
+                      </span>
+                    </div>
+                    <div className="bg-muted rounded-lg p-4 space-y-2 ml-6">
+                      <p className="text-sm font-medium">
+                        Approved Wallet Address
+                      </p>
+                      <div className="space-y-1 font-mono">
+                        {selectedPartner.ens && (
+                          <div className="text-sm">{selectedPartner.ens}</div>
+                        )}
+                        <div className="text-sm text-muted-foreground">
+                          {truncateAddress(selectedPartner.address)}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex gap-2 items-center">
-                  <span className="font-medium">1.3</span>
-                  <Button asChild>
-                    <a
-                      href={`https://base.easscan.org/attestation/attestWithSchema/${BUILDER_SCHEMA_UID}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2"
-                    >
-                      Open EAS <ExternalLink className="h-4 w-4" />
-                    </a>
-                  </Button>
+                  <div className="flex gap-2 items-center">
+                    <span className="font-medium">1.3</span>
+                    <Button asChild>
+                      <a
+                        href={`https://base.easscan.org/attestation/attestWithSchema/${BUILDER_SCHEMA_UID}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2"
+                      >
+                        Open EAS <ExternalLink className="h-4 w-4" />
+                      </a>
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -175,18 +186,30 @@ export default function VerificationGuidePage() {
               <h2 className="text-xl font-semibold">
                 Step 2: Configure Toggles
               </h2>
-              <div className="space-y-2">
-                <p>Set the following toggles:</p>
-                <div className="space-y-3">
-                  <div className="flex gap-2">
-                    <span className="font-medium">2.1</span>
-                    <span>Set the "isBuilder" toggle to True</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="font-medium">2.2</span>
-                    <span>
-                      Set the final toggle to "Onchain" (not "Offchain")
-                    </span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="relative aspect-video rounded-lg overflow-hidden border bg-muted">
+                  <Image
+                    src="/images/guide/step2-configure-toggles.gif"
+                    alt="Configuring isBuilder and Onchain toggles"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <p>Set the following toggles:</p>
+                    <div className="space-y-3">
+                      <div className="flex gap-2">
+                        <span className="font-medium">2.1</span>
+                        <span>Set the "isBuilder" toggle to True</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="font-medium">2.2</span>
+                        <span>
+                          Set the final toggle to "Onchain" (not "Offchain")
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -196,39 +219,54 @@ export default function VerificationGuidePage() {
               <h2 className="text-xl font-semibold">
                 Step 3: Add Partner Reference
               </h2>
-              <div className="space-y-4">
-                <div className="flex gap-2">
-                  <span className="font-medium">3.1</span>
-                  <span>
-                    Click on "Advanced Options" to expand additional settings
-                  </span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="relative aspect-video rounded-lg overflow-hidden border bg-muted">
+                  <Image
+                    src="/images/guide/step3-partner-reference.gif"
+                    alt="Adding partner reference UID"
+                    fill
+                    className="object-cover"
+                  />
                 </div>
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <span className="font-medium">3.2</span>
-                    <span>
-                      Copy and paste the following UID in the "Referenced
-                      Attestation UID" field:
-                    </span>
-                  </div>
-                  <div className="bg-muted rounded-lg p-4 space-y-2 ml-6">
-                    <p className="text-sm font-medium">
-                      Partner Attestation UID
-                    </p>
-                    <div className="flex items-center justify-between gap-2 font-mono">
-                      <span className="break-all">{selectedPartner.id}</span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => copyToClipboard(selectedPartner.id)}
-                        className="transition-all duration-200 shrink-0"
-                      >
-                        {copying ? (
-                          <Check className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
-                      </Button>
+                <div className="space-y-4">
+                  <div className="space-y-4">
+                    <div className="flex gap-2">
+                      <span className="font-medium">3.1</span>
+                      <span>
+                        Click on "Advanced Options" to expand additional
+                        settings
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <span className="font-medium">3.2</span>
+                        <span>
+                          Copy and paste the following UID in the "Referenced
+                          Attestation UID" field:
+                        </span>
+                      </div>
+                      <div className="bg-muted rounded-lg p-4 space-y-2 ml-6">
+                        <p className="text-sm font-medium">
+                          Partner Attestation UID
+                        </p>
+                        <div className="flex items-center justify-between gap-2 font-mono">
+                          <span className="break-all">
+                            {selectedPartner.id}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => copyToClipboard(selectedPartner.id)}
+                            className="transition-all duration-200 shrink-0"
+                          >
+                            {copying ? (
+                              <Check className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -239,43 +277,65 @@ export default function VerificationGuidePage() {
               <h2 className="text-xl font-semibold">
                 Step 4: Add Builder Addresses
               </h2>
-              <div className="space-y-3">
-                <div className="flex gap-2">
-                  <span className="font-medium">4.1</span>
-                  <span>Click on "Import Addresses" to open the modal</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="relative aspect-video rounded-lg overflow-hidden border bg-muted">
+                  <Image
+                    src="/images/guide/step4-add-addresses.gif"
+                    alt="Adding multiple builder addresses"
+                    fill
+                    className="object-cover"
+                  />
                 </div>
-                <div className="flex gap-2">
-                  <span className="font-medium">4.2</span>
-                  <span>Select "Add Multiple Recipients"</span>
-                </div>
-                <div className="flex gap-2">
-                  <span className="font-medium">4.3</span>
-                  <span>
-                    Paste the list of addresses in the text input area (one
-                    address per line)
-                  </span>
+                <div className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex gap-2">
+                      <span className="font-medium">4.1</span>
+                      <span>Click on "Import Addresses" to open the modal</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="font-medium">4.2</span>
+                      <span>Select "Add Multiple Recipients"</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="font-medium">4.3</span>
+                      <span>
+                        Paste the list of addresses in the text input area (one
+                        address per line)
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
             <div className="rounded-lg border p-6 space-y-4">
               <h2 className="text-xl font-semibold">Step 5: Add Context</h2>
-              <div className="space-y-4">
-                <div className="flex gap-2">
-                  <span className="font-medium">5.1</span>
-                  <div className="space-y-2">
-                    <span>
-                      Add relevant information about the builders in the Context
-                      field
-                    </span>
-                    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                      <p className="text-sm text-yellow-800">
-                        Note: This context will apply to all addresses in this
-                        batch. If you need to add different contexts for
-                        different groups (e.g., hackathon participants vs
-                        winners), create separate attestations by repeating this
-                        process for each group.
-                      </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="relative aspect-video rounded-lg overflow-hidden border bg-muted">
+                  <Image
+                    src="/images/guide/step5-add-context.gif"
+                    alt="Adding context information"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="space-y-4">
+                  <div className="flex gap-2">
+                    <span className="font-medium">5.1</span>
+                    <div className="space-y-2">
+                      <span>
+                        Add relevant information about the builders in the
+                        Context field
+                      </span>
+                      <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                        <p className="text-sm text-yellow-800">
+                          Note: This context will apply to all addresses in this
+                          batch. If you need to add different contexts for
+                          different groups (e.g., hackathon participants vs
+                          winners), create separate attestations by repeating
+                          this process for each group.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -286,22 +346,34 @@ export default function VerificationGuidePage() {
               <h2 className="text-xl font-semibold">
                 Step 6: Submit Attestation
               </h2>
-              <div className="space-y-3">
-                <div className="flex gap-2">
-                  <span className="font-medium">6.1</span>
-                  <span>Review all the information</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="relative aspect-video rounded-lg overflow-hidden border bg-muted">
+                  <Image
+                    src="/images/guide/step6-submit.gif"
+                    alt="Submitting the attestation"
+                    fill
+                    className="object-cover"
+                  />
                 </div>
-                <div className="flex gap-2">
-                  <span className="font-medium">6.2</span>
-                  <span>Click "Attest" to submit</span>
-                </div>
-                <div className="flex gap-2">
-                  <span className="font-medium">6.3</span>
-                  <span>Pay the transaction fee (on Base network)</span>
-                </div>
-                <div className="flex gap-2">
-                  <span className="font-medium">6.4</span>
-                  <span>Wait for the transaction to be confirmed</span>
+                <div className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex gap-2">
+                      <span className="font-medium">6.1</span>
+                      <span>Review all the information</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="font-medium">6.2</span>
+                      <span>Click "Attest" to submit</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="font-medium">6.3</span>
+                      <span>Pay the transaction fee (on Base network)</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="font-medium">6.4</span>
+                      <span>Wait for the transaction to be confirmed</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -331,8 +403,7 @@ export default function VerificationGuidePage() {
         ) : (
           <div className="mt-8 rounded-lg border p-6 bg-muted/50">
             <p className="text-center text-muted-foreground">
-              Please select your organization to view the verification
-              instructions.
+              Your verification instructions will appear here.
             </p>
           </div>
         )}
