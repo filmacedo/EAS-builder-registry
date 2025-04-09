@@ -117,7 +117,7 @@ export function BuildersTable({ builders }: BuildersTableProps) {
                 onClick={() => handleSort("earliestAttestationDate")}
               >
                 <div className="flex items-center">
-                  First Verified
+                  Verified On
                   <ArrowUpDown className="ml-2 h-4 w-4" />
                 </div>
               </th>
@@ -132,7 +132,7 @@ export function BuildersTable({ builders }: BuildersTableProps) {
                 onClick={() => handleSort("totalVerifications")}
               >
                 <div className="flex items-center">
-                  Total Verifications
+                  Verifications
                   <ArrowUpDown className="ml-2 h-4 w-4" />
                 </div>
               </th>

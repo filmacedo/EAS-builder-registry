@@ -111,17 +111,21 @@ export default function PartnersPage() {
       <div className="space-y-4">
         <h1 className="text-3xl font-bold">Verification Partners</h1>
         <p className="text-muted-foreground">
-          Organizations that verify genuine onchain builders through
-          attestations.
+          Trusted organizations can verify onchain builders in their communities
+          with attestations.
         </p>
       </div>
 
       <div className="rounded-lg border-l-4 border-l-blue-500 bg-blue-50 p-6">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <h3 className="font-medium">Are you a verification partner?</h3>
+            <h3 className="font-medium">Already a verification partner?</h3>
             <p className="text-sm text-muted-foreground">
-              Learn how to verify builders using our step-by-step guide.
+              Learn how to verify builders in your community using our
+              step-by-step guide.
+              <br />
+              Attest before April 17th to feature your builders in the Times
+              Square ad.
             </p>
           </div>
           <Link href="/partners/guide">
@@ -131,8 +135,52 @@ export default function PartnersPage() {
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-2xl font-semibold">Partner Leaderboard</h2>
+        <h2 className="text-2xl font-semibold">Impact Leaderboard</h2>
         <PartnersTable partners={partners} />
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="rounded-lg border p-6 space-y-4">
+          <h3 className="text-xl font-semibold">For Organizations</h3>
+          <p className="text-muted-foreground">
+            Verify builders from your community and get your featured on Times
+            Square.
+          </p>
+          <Button asChild>
+            <a
+              href="https://forms.gle/1RDxpQj4uHGHrQBF8"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Become a Partner
+            </a>
+          </Button>
+        </div>
+
+        <div className="rounded-lg border p-6 space-y-4">
+          <h3 className="text-xl font-semibold">For Builders</h3>
+          <p className="text-muted-foreground">
+            Join Talent Protocol to boost your Builder Score and qualify for{" "}
+            <a
+              href="https://www.builderscore.xyz/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:underline"
+            >
+              Builder Rewards
+            </a>
+            .
+          </p>
+          <Button asChild>
+            <a
+              href="https://talentprotocol.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Create Profile
+            </a>
+          </Button>
+        </div>
       </div>
     </div>
   );

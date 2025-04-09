@@ -34,6 +34,17 @@ export function Header() {
           >
             Partners
           </Link>
+          <Link
+            href="/manifesto"
+            className={cn(
+              "text-sm font-medium transition-colors hover:text-primary",
+              pathname === "/manifesto"
+                ? "text-primary"
+                : "text-muted-foreground"
+            )}
+          >
+            Manifesto
+          </Link>
         </nav>
       </div>
     </header>

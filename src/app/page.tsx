@@ -126,10 +126,12 @@ export default function Home() {
   return (
     <div className="space-y-8">
       <div className="space-y-4">
-        <h1 className="text-3xl font-bold">Builder Registry</h1>
+        <h1 className="text-3xl font-bold">
+          Registry of Verified Onchain Builders
+        </h1>
         <p className="text-muted-foreground">
-          A decentralized registry that identifies and recognizes genuine
-          onchain builders through verified attestations.
+          The first community-sourced directory that recognizes real onchain
+          builders through verified attestations.
         </p>
       </div>
 
@@ -156,8 +158,16 @@ export default function Home() {
         <div className="rounded-lg border p-6 space-y-4">
           <h3 className="text-xl font-semibold">For Builders</h3>
           <p className="text-muted-foreground">
-            Create your Talent Protocol profile to showcase your work and get
-            verified by partners.
+            Join Talent Protocol to boost your Builder Score and qualify for{" "}
+            <a
+              href="https://www.builderscore.xyz/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:underline"
+            >
+              Builder Rewards
+            </a>
+            .
           </p>
           <Button asChild>
             <a
@@ -173,8 +183,8 @@ export default function Home() {
         <div className="rounded-lg border p-6 space-y-4">
           <h3 className="text-xl font-semibold">For Organizations</h3>
           <p className="text-muted-foreground">
-            Become a verification partner and help identify genuine blockchain
-            builders.
+            Verify builders from your community and get your featured on Times
+            Square.
           </p>
           <Button asChild>
             <a
@@ -182,7 +192,7 @@ export default function Home() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Apply to be a Verification Partner
+              Become a Partner
             </a>
           </Button>
         </div>
