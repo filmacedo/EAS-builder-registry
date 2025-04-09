@@ -148,7 +148,7 @@ export default function PartnersPage() {
           </p>
           <Button asChild>
             <a
-              href="https://forms.gle/1RDxpQj4uHGHrQBF8"
+              href="https://talentprotocol.notion.site/buildersday2025-partners?pvs=4"
               target="_blank"
               rel="noopener noreferrer"
             >
