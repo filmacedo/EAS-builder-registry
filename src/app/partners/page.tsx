@@ -89,7 +89,11 @@ export default function PartnersPage() {
   }, []);
 
   if (loading) {
-    return <div className="container mx-auto p-4">Loading...</div>;
+    return (
+      <div className="container mx-auto p-4">
+        Loading onchain attestations...
+      </div>
+    );
   }
 
   if (error) {

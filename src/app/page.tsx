@@ -106,7 +106,11 @@ export default function Home() {
   };
 
   if (loading) {
-    return <div className="container mx-auto p-4">Loading...</div>;
+    return (
+      <div className="container mx-auto p-4">
+        Loading onchain attestations...
+      </div>
+    );
   }
 
   if (error) {
@@ -183,7 +187,7 @@ export default function Home() {
         <div className="rounded-lg border p-6 space-y-4">
           <h3 className="text-xl font-semibold">For Organizations</h3>
           <p className="text-muted-foreground">
-            Verify builders from your community and get your featured on Times
+            Verify builders from your community and get featured on Times
             Square.
           </p>
           <Button asChild>
