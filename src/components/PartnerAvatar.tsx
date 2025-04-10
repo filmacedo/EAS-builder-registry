@@ -12,8 +12,8 @@ export function PartnerAvatar({ url, name }: PartnerAvatarProps) {
 
   if (!url || error) {
     return (
-      <div className="relative h-6 w-6 rounded-full border-2 border-background bg-muted flex items-center justify-center">
-        <Building className="h-4 w-4 text-muted-foreground" />
+      <div className="relative h-10 w-10 rounded-full border-2 border-background bg-muted flex items-center justify-center">
+        <Building className="h-8 w-8 text-muted-foreground" />
       </div>
     );
   }
@@ -23,7 +23,7 @@ export function PartnerAvatar({ url, name }: PartnerAvatarProps) {
     const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
 
     return (
-      <div className="relative h-6 w-6 rounded-full border-2 border-background bg-muted overflow-hidden">
+      <div className="relative h-10 w-10 rounded-full border-2 border-background bg-muted overflow-hidden">
         <Image
           src={faviconUrl}
           alt={`${name} favicon`}
@@ -35,8 +35,8 @@ export function PartnerAvatar({ url, name }: PartnerAvatarProps) {
     );
   } catch {
     return (
-      <div className="relative h-6 w-6 rounded-full border-2 border-background bg-muted flex items-center justify-center">
-        <Building className="h-4 w-4 text-muted-foreground" />
+      <div className="relative h-10 w-10 rounded-full border-2 border-background bg-muted flex items-center justify-center">
+        <Building className="h-8 w-8 text-muted-foreground" />
       </div>
     );
   }
