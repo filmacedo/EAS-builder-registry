@@ -1,51 +1,61 @@
 "use client";
 
-import { ArrowUpDown } from "lucide-react";
+import { truncateAddress } from "@/lib/utils";
+import Link from "next/link";
+import { ExternalLink, UserCircle } from "lucide-react";
 import { ProcessedBuilder } from "@/services/builders";
 import { useCallback, useMemo, memo, useState } from "react";
-import { truncateText, truncateAddress } from "@/lib/utils";
-import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface BuildersTableProps {
   builders: ProcessedBuilder[];
 }
 
-type SortField = "totalVerifications" | "earliestAttestationDate";
-type SortOrder = "asc" | "desc";
-
 // Memoized table row component
 const BuilderTableRow = memo(({ builder }: { builder: ProcessedBuilder }) => (
   <tr className="border-b transition-colors hover:bg-muted/50">
     <td className="p-4">
-      {builder.ens ? (
-        <Link
-          href={`https://app.ens.domains/${builder.ens}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary hover:underline"
-        >
-          {builder.ens}
-        </Link>
-      ) : (
-        <Link
-          href={`https://etherscan.io/address/${builder.address}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary hover:underline"
-        >
-          {truncateAddress(builder.address)}
-        </Link>
-      )}
+      <div className="flex items-center gap-3">
+        <div className="relative h-10 w-10 shrink-0">
+          <UserCircle className="h-full w-full text-muted-foreground" />
+        </div>
+        <div className="flex flex-col">
+          {builder.ens ? (
+            <>
+              <Link
+                href={`https://app.ens.domains/${builder.ens}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium hover:underline"
+              >
+                {builder.ens}
+              </Link>
+              <Link
+                href={`https://etherscan.io/address/${builder.address}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-muted-foreground hover:underline"
+              >
+                {truncateAddress(builder.address)}
+              </Link>
+            </>
+          ) : (
+            <Link
+              href={`https://etherscan.io/address/${builder.address}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium hover:underline"
+            >
+              {truncateAddress(builder.address)}
+            </Link>
+          )}
+        </div>
+      </div>
     </td>
     <td className="p-4">
-      <Link
-        href={`https://base.easscan.org/attestation/view/${builder.earliestAttestationId}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-primary hover:underline"
-      >
-        {new Date(builder.earliestAttestationDate * 1000).toLocaleDateString()}
-      </Link>
+      {new Date(builder.earliestAttestationDate * 1000).toLocaleDateString()}
     </td>
     <td className="p-4">
       {builder.earliestPartnerAttestationId ? (
@@ -53,73 +63,70 @@ const BuilderTableRow = memo(({ builder }: { builder: ProcessedBuilder }) => (
           href={`https://base.easscan.org/attestation/view/${builder.earliestPartnerAttestationId}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-primary hover:underline"
         >
-          {builder.earliestPartnerName}
+          <Badge variant="partner" className="cursor-pointer">
+            {builder.earliestPartnerName}
+          </Badge>
         </Link>
       ) : (
         builder.earliestPartnerName
       )}
     </td>
     <td className="p-4">
+      <span className="text-muted-foreground">{builder.context}</span>
+    </td>
+    <td className="p-4 text-center">
       <Link
         href={`https://base.easscan.org/attestation/view/${builder.earliestAttestationId}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-primary hover:underline"
+        className="inline-flex text-muted-foreground hover:text-primary"
       >
-        {truncateText(builder.context || "", 50)}
+        <ExternalLink className="h-4 w-4" />
       </Link>
     </td>
-    <td className="p-4">{builder.totalVerifications}</td>
   </tr>
 ));
 
 BuilderTableRow.displayName = "BuilderTableRow";
 
 export function BuildersTable({ builders }: BuildersTableProps) {
-  const [sortField, setSortField] = useState<SortField>("totalVerifications");
-  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
-  const handleSort = useCallback((field: SortField) => {
-    setSortField((currentField) => {
-      if (currentField === field) {
-        setSortOrder((currentOrder) =>
-          currentOrder === "asc" ? "desc" : "asc"
-        );
-        return currentField;
-      }
-      setSortOrder("desc");
-      return field;
-    });
-  }, []);
-
+  // Sort builders by verification date (most recent first)
   const sortedBuilders = useMemo(() => {
-    return [...builders].sort((a, b) => {
-      const aValue = a[sortField];
-      const bValue = b[sortField];
-      const multiplier = sortOrder === "asc" ? 1 : -1;
-      return (aValue > bValue ? 1 : -1) * multiplier;
-    });
-  }, [builders, sortField, sortOrder]);
+    return [...builders].sort(
+      (a, b) => b.earliestAttestationDate - a.earliestAttestationDate
+    );
+  }, [builders]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(sortedBuilders.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentBuilders = sortedBuilders.slice(startIndex, endIndex);
+
+  // Handle page changes
+  const handlePreviousPage = () => {
+    setCurrentPage((prev) => Math.max(1, prev - 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+  };
 
   return (
     <div className="rounded-md border">
-      <div className="max-h-[600px] overflow-auto">
+      <div className="relative">
         <table className="w-full caption-bottom text-sm">
-          <thead className="sticky top-0 bg-white border-b">
+          <thead className="bg-white border-b">
             <tr className="border-b transition-colors hover:bg-muted/50">
               <th className="h-12 px-4 text-left align-middle font-medium">
-                Address
+                Builder
               </th>
-              <th
-                className="h-12 px-4 text-left align-middle font-medium cursor-pointer"
-                onClick={() => handleSort("earliestAttestationDate")}
-              >
-                <div className="flex items-center">
-                  Verified On
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </div>
+              <th className="h-12 px-4 text-left align-middle font-medium">
+                Verified On
               </th>
               <th className="h-12 px-4 text-left align-middle font-medium">
                 Verified By
@@ -127,23 +134,47 @@ export function BuildersTable({ builders }: BuildersTableProps) {
               <th className="h-12 px-4 text-left align-middle font-medium">
                 Context
               </th>
-              <th
-                className="h-12 px-4 text-left align-middle font-medium cursor-pointer"
-                onClick={() => handleSort("totalVerifications")}
-              >
-                <div className="flex items-center">
-                  Verifications
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </div>
+              <th className="h-12 px-4 text-center align-middle font-medium w-20">
+                EAS
               </th>
             </tr>
           </thead>
           <tbody>
-            {sortedBuilders.map((builder) => (
+            {currentBuilders.map((builder) => (
               <BuilderTableRow key={builder.id} builder={builder} />
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex items-center justify-between px-4 py-4 border-t">
+        <div className="flex-1 text-sm text-muted-foreground">
+          Showing {startIndex + 1} to{" "}
+          {Math.min(endIndex, sortedBuilders.length)} of {sortedBuilders.length}{" "}
+          entries
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePreviousPage}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <div className="text-sm font-medium">
+            Page {currentPage} of {totalPages}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );

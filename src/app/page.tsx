@@ -1,8 +1,7 @@
 "use client";
 
 import { Metrics } from "@/components/Metrics";
-import { Search } from "@/components/Search";
-import { BuildersTable } from "@/components/BuildersTable";
+import { RegistryTabs } from "@/components/RegistryTabs";
 import { Button } from "@/components/ui/button";
 import { getVerificationPartners, getVerifiedBuilders } from "@/services/eas";
 import { processBuilderData } from "@/services/builders";
@@ -19,6 +18,9 @@ export default function Home() {
     []
   );
   const [partners, setPartners] = useState<ProcessedPartner[]>([]);
+  const [filteredPartners, setFilteredPartners] = useState<ProcessedPartner[]>(
+    []
+  );
   const [metrics, setMetrics] = useState<ProcessedMetrics>({
     totalBuilders: 0,
     totalPartners: 0,
@@ -26,7 +28,8 @@ export default function Home() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [builderSearchTerm, setBuilderSearchTerm] = useState("");
+  const [partnerSearchTerm, setPartnerSearchTerm] = useState("");
   const [selectedPartnerId, setSelectedPartnerId] = useState<string | null>(
     null
   );
@@ -50,6 +53,7 @@ export default function Home() {
         setBuilders(builders);
         setFilteredBuilders(builders);
         setPartners(partners);
+        setFilteredPartners(partners);
         setMetrics(metrics);
       } catch (error) {
         setError(
@@ -69,23 +73,15 @@ export default function Home() {
   useEffect(() => {
     let filtered = builders;
 
-    // Apply search filter
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
+    if (builderSearchTerm) {
+      const term = builderSearchTerm.toLowerCase();
       filtered = filtered.filter((builder) => {
-        // Check ENS name if available
-        if (builder.ens && builder.ens.toLowerCase().includes(term)) {
-          return true;
-        }
-        // Check wallet address
-        if (builder.address.toLowerCase().includes(term)) {
-          return true;
-        }
+        if (builder.ens?.toLowerCase().includes(term)) return true;
+        if (builder.address.toLowerCase().includes(term)) return true;
         return false;
       });
     }
 
-    // Apply partner filter
     if (selectedPartnerId && selectedPartnerId !== "all") {
       filtered = filtered.filter((builder) =>
         builder.attestations.some(
@@ -95,15 +91,24 @@ export default function Home() {
     }
 
     setFilteredBuilders(filtered);
-  }, [builders, searchTerm, selectedPartnerId]);
+  }, [builders, builderSearchTerm, selectedPartnerId]);
 
-  const handleSearch = (value: string) => {
-    setSearchTerm(value);
-  };
+  // Filter partners based on search term
+  useEffect(() => {
+    let filtered = partners;
 
-  const handlePartnerFilter = (partnerId: string | null) => {
-    setSelectedPartnerId(partnerId);
-  };
+    if (partnerSearchTerm) {
+      const term = partnerSearchTerm.toLowerCase();
+      filtered = filtered.filter((partner) => {
+        if (partner.name.toLowerCase().includes(term)) return true;
+        if (partner.address.toLowerCase().includes(term)) return true;
+        if (partner.ens?.toLowerCase().includes(term)) return true;
+        return false;
+      });
+    }
+
+    setFilteredPartners(filtered);
+  }, [partners, partnerSearchTerm]);
 
   if (loading) {
     return (
@@ -128,68 +133,17 @@ export default function Home() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="space-y-4">
-        <h1 className="text-3xl font-bold">
-          Registry of Verified Onchain Builders
+    <div className="space-y-16">
+      <div className="flex flex-col items-center text-center space-y-6 py-16">
+        <h1 className="text-4xl font-bold max-w-2xl">
+          Verified Registry of Onchain Builders
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground max-w-2xl">
           The first community-sourced directory that recognizes real onchain
-          builders through verified attestations.
+          builders through verified attestations. Join as a partner before April
+          17th to be featured on Times Square.
         </p>
-      </div>
-
-      <Metrics data={metrics} />
-
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold">Find Builders</h2>
-        <Search
-          onSearch={handleSearch}
-          onPartnerFilter={handlePartnerFilter}
-          partners={partners.map((p) => ({
-            id: p.attestationUID,
-            name: p.name,
-          }))}
-        />
-      </div>
-
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold">Verified Builders</h2>
-        <BuildersTable builders={filteredBuilders} />
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-lg border p-6 space-y-4">
-          <h3 className="text-xl font-semibold">For Builders</h3>
-          <p className="text-muted-foreground">
-            Join Talent Protocol to boost your Builder Score and qualify for{" "}
-            <a
-              href="https://www.builderscore.xyz/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground hover:underline"
-            >
-              Builder Rewards
-            </a>
-            .
-          </p>
-          <Button asChild>
-            <a
-              href="https://talentprotocol.com"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Create Profile
-            </a>
-          </Button>
-        </div>
-
-        <div className="rounded-lg border p-6 space-y-4">
-          <h3 className="text-xl font-semibold">For Organizations</h3>
-          <p className="text-muted-foreground">
-            Verify builders from your community and get featured on Times
-            Square.
-          </p>
+        <div className="flex gap-4">
           <Button asChild>
             <a
               href="https://talentprotocol.notion.site/buildersday2025-partners?pvs=4"
@@ -199,7 +153,33 @@ export default function Home() {
               Become a Partner
             </a>
           </Button>
+          <Button variant="outline" asChild>
+            <a
+              href="https://talentprotocol.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Create Builder Profile
+            </a>
+          </Button>
         </div>
+      </div>
+
+      <Metrics data={metrics} />
+
+      <div className="space-y-6">
+        <h2 className="text-2xl font-mono">Onchain Builder Registry</h2>
+        <RegistryTabs
+          builders={filteredBuilders}
+          partners={filteredPartners}
+          onBuilderSearch={setBuilderSearchTerm}
+          onPartnerSearch={setPartnerSearchTerm}
+          onPartnerFilter={setSelectedPartnerId}
+          availablePartners={partners.map((p) => ({
+            id: p.attestationUID,
+            name: p.name,
+          }))}
+        />
       </div>
     </div>
   );

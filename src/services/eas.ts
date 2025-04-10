@@ -12,15 +12,6 @@ const PARTNER_SCHEMA_UID =
 const BUILDER_SCHEMA_UID =
   "0x597905068aedcde4321ceaf2c42e24d3bbe0af694159bececd686bf057ec7ea5";
 
-// Initialize EAS
-const eas = new EAS(EAS_CONTRACT_ADDRESS);
-
-// Initialize provider (we'll use public RPC for now)
-const provider = new ethers.JsonRpcProvider("https://mainnet.base.org");
-
-// Set the provider
-eas.connect(provider);
-
 // Initialize schema encoders
 const partnerSchemaEncoder = new SchemaEncoder("string name,string url");
 const builderSchemaEncoder = new SchemaEncoder("bool isBuilder,string context");

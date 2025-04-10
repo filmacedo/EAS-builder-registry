@@ -15,6 +15,8 @@ interface Partner {
   time: number;
   verificationCount: number;
   ens?: string;
+  attestationUID: string;
+  verifiedBuildersCount: number;
 }
 
 export default function PartnersPage() {
@@ -54,6 +56,9 @@ export default function PartnersPage() {
               url: attestation.decodedData.url || "",
               time: attestation.time,
               verificationCount: verificationCounts.get(attestation.id) || 0,
+              attestationUID: attestation.id,
+              verifiedBuildersCount:
+                verificationCounts.get(attestation.id) || 0,
             };
           })
           .filter((partner): partner is Partner => partner !== null)
@@ -123,17 +128,16 @@ export default function PartnersPage() {
       <div className="rounded-lg border-l-4 border-l-blue-500 bg-blue-50 p-6">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <h3 className="font-medium">Already a verification partner?</h3>
+            <h3 className="font-medium">Already a Verification Partner?</h3>
             <p className="text-sm text-muted-foreground">
-              Learn how to verify builders in your community using our
-              step-by-step guide.
+              Start verifying builders in your community using our step-by-step
+              guide.
               <br />
-              Attest before April 17th to feature your builders in the Times
-              Square ad.
+              Attest before April 17th to be featured in the Times Square ad.
             </p>
           </div>
           <Link href="/partners/guide">
-            <Button>View Guide</Button>
+            <Button>Verify Builders</Button>
           </Link>
         </div>
       </div>

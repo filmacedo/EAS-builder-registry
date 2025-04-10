@@ -7,8 +7,8 @@ import { Toaster } from "@/components/ui/toaster";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Builder Registry",
-  description: "A decentralized registry of verified onchain builders",
+  title: "vBuilders",
+  description: "A public registry of verified onchain builders",
 };
 
 export default function RootLayout({
