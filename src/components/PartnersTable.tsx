@@ -71,13 +71,13 @@ export function PartnersTable({ partners }: PartnersTableProps) {
                 Partner
               </th>
               <th className="h-12 px-4 text-left align-middle font-medium">
-                Verified Address
+                Attester Address
               </th>
               <th className="h-12 px-4 text-left align-middle font-medium">
                 Builders
               </th>
               <th className="h-12 px-4 text-left align-middle font-medium">
-                Verifications
+                Attestations
               </th>
               <th className="h-12 px-4 text-center align-middle font-medium w-20">
                 EAS
