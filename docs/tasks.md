@@ -53,6 +53,7 @@
   - [x] Create .env.local file with TALENT_API_KEY
   - [x] Add environment variable validation in src/lib/env.ts
   - [x] Document API key setup in README
+- [ ] Add caching for Talent API responses
 - [ ] Implement Builder Score fetching
 - [ ] Add Talent profile links
 - [ ] Add average builder score to Partners Leaderboard
