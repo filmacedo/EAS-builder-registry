@@ -33,12 +33,19 @@
 
 ### Performance Optimization & Caching
 
-- [ ] Implement basic time-based caching using Next.js unstable_cache:
-  - [ ] Set up 5-minute cache for EAS attestations using unstable_cache
-  - [ ] Add cache for Talent API responses using unstable_cache
-  - [ ] Configure Vercel edge caching
-- [ ] Add basic performance monitoring
-- [ ] Implement error handling for cache misses
+- [x] Implement EAS attestation caching
+  - [x] Set up cache utility with performance monitoring
+  - [x] Add cache wrapper for EAS functions
+  - [x] Implement error handling for cache misses
+- [x] Configure edge caching in Next.js
+- [x] Monitor and optimize cache performance
+  - [x] Add metrics collection
+  - [x] Implement monitoring endpoint
+  - [x] Add timeout protection
+  - [x] Enhance error handling
+  - [ ] Add cache performance dashboard
+  - [ ] Implement cache invalidation strategy
+  - [ ] Add cache size monitoring
 
 ### OnchainKit Integration
 
@@ -49,17 +56,15 @@
 
 ### Talent API Integration
 
-- [ ] Set up Talent API connection:
-  - [x] Create .env.local file with TALENT_API_KEY
-  - [x] Add environment variable validation in src/lib/env.ts
-  - [x] Document API key setup in README
-- [ ] Add caching for Talent API responses
+- [ ] Set up Talent API connection
 - [ ] Implement Builder Score fetching
 - [ ] Add Talent profile links
 - [ ] Add average builder score to Partners Leaderboard
+- [ ] Add caching for Talent API responses
 
 ## Future Enhancements 🔮
 
+- [ ] Add google analytics and/or posthog
 - [ ] Add builder profile pages
 - [ ] Implement advanced search filters
 - [ ] Add social sharing functionality

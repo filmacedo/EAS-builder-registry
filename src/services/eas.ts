@@ -35,7 +35,7 @@ async function fetchWithRetry<T>(
 }
 
 async function fetchFromEAS(query: string) {
-  const response = await fetch("/api/eas", {
+  const response = await fetch("/api/cache", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
