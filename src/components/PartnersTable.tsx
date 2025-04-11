@@ -2,12 +2,7 @@
 
 import { truncateAddress } from "@/lib/utils";
 import Link from "next/link";
-import {
-  ExternalLink,
-  UserCircle,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 import { ProcessedPartner } from "@/services/builders";
 import { BuilderAvatars } from "@/components/BuilderAvatars";
 import { PartnerAvatar } from "@/components/PartnerAvatar";

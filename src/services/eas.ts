@@ -1,12 +1,10 @@
-import { EAS, SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
-import { ethers } from "ethers";
+import { SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
 import {
   VerificationPartnerAttestation,
   VerifiedBuilderAttestation,
 } from "@/types";
 import { resolveAddresses } from "./ens";
 
-const EAS_CONTRACT_ADDRESS = "0xC2679fBD37d54388Ce493F1DB75320D236e1815e"; // Base Mainnet
 const PARTNER_SCHEMA_UID =
   "0x0c25f92df9ba914668f7780e428a1b5238ae7441c765fbe8b7b528f8209ef4e3";
 const BUILDER_SCHEMA_UID =

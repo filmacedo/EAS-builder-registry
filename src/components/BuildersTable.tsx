@@ -4,7 +4,7 @@ import { truncateAddress } from "@/lib/utils";
 import Link from "next/link";
 import { ExternalLink, UserCircle } from "lucide-react";
 import { ProcessedBuilder } from "@/services/builders";
-import { useCallback, useMemo, memo, useState } from "react";
+import { useMemo, memo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";

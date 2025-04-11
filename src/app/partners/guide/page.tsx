@@ -29,7 +29,6 @@ interface Partner {
 export default function VerificationGuidePage() {
   const [partners, setPartners] = useState<Partner[]>([]);
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
-  const [loading, setLoading] = useState(true);
   const [copying, setCopying] = useState(false);
   const { toast } = useToast();
 
@@ -56,8 +55,6 @@ export default function VerificationGuidePage() {
         setPartners(processedPartners);
       } catch (error) {
         console.error("Error fetching partners:", error);
-      } finally {
-        setLoading(false);
       }
     };
 

@@ -139,8 +139,6 @@ export async function POST(request: Request) {
       metrics: {
         totalTime: duration,
         cached: true,
-        age: age,
-        stale: needsRevalidation,
       },
       cacheStatus: result.cacheStatus,
     };
