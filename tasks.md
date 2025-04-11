@@ -1,0 +1,3 @@
+- [x] Add GIF to image placeholder in Step 1: Access EAS on @guide
+- [x] Create guide directory in public/images for storing guide assets
+- [x] Add GIFs for steps 2-6 in the verification guide

@@ -130,7 +130,7 @@ export default function VerificationGuidePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="relative aspect-video rounded-lg overflow-hidden border bg-muted">
                   <Image
-                    src="/images/guide/step1-eas-access.gif"
+                    src="/images/guide/step-1.gif"
                     alt="Accessing EAS and connecting wallet"
                     fill
                     className="object-cover"
@@ -189,7 +189,7 @@ export default function VerificationGuidePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="relative aspect-video rounded-lg overflow-hidden border bg-muted">
                   <Image
-                    src="/images/guide/step2-configure-toggles.gif"
+                    src="/images/guide/step-2.gif"
                     alt="Configuring isBuilder and Onchain toggles"
                     fill
                     className="object-cover"
@@ -222,7 +222,7 @@ export default function VerificationGuidePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="relative aspect-video rounded-lg overflow-hidden border bg-muted">
                   <Image
-                    src="/images/guide/step3-partner-reference.gif"
+                    src="/images/guide/step-3.gif"
                     alt="Adding partner reference UID"
                     fill
                     className="object-cover"
@@ -280,7 +280,7 @@ export default function VerificationGuidePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="relative aspect-video rounded-lg overflow-hidden border bg-muted">
                   <Image
-                    src="/images/guide/step4-add-addresses.gif"
+                    src="/images/guide/step-4.gif"
                     alt="Adding multiple builder addresses"
                     fill
                     className="object-cover"
@@ -313,7 +313,7 @@ export default function VerificationGuidePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="relative aspect-video rounded-lg overflow-hidden border bg-muted">
                   <Image
-                    src="/images/guide/step5-add-context.gif"
+                    src="/images/guide/step-5.gif"
                     alt="Adding context information"
                     fill
                     className="object-cover"
@@ -349,7 +349,7 @@ export default function VerificationGuidePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="relative aspect-video rounded-lg overflow-hidden border bg-muted">
                   <Image
-                    src="/images/guide/step6-submit.gif"
+                    src="/images/guide/step-6.gif"
                     alt="Submitting the attestation"
                     fill
                     className="object-cover"
