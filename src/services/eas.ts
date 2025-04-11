@@ -47,7 +47,20 @@ async function fetchFromEAS(query: string) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
 
-  return response.json();
+  const result = await response.json();
+
+  // Log the response for debugging
+  console.log("EAS Response:", {
+    status: response.status,
+    hasData: !!result,
+    dataShape: result ? Object.keys(result) : null,
+  });
+
+  if (!result || !result.data) {
+    throw new Error("Invalid response structure from cache");
+  }
+
+  return result.data;
 }
 
 export async function getVerificationPartners(): Promise<
@@ -133,106 +146,126 @@ export async function getVerifiedBuilders(): Promise<
   VerifiedBuilderAttestation[]
 > {
   return fetchWithRetry(async () => {
-    // First, fetch all partner attestations to build a map
-    const { data: partnersData } = await fetchFromEAS(`
-      query GetPartnerAttestations {
-        attestations(
-          where: {
-            schemaId: { equals: "${PARTNER_SCHEMA_UID}" }
-            revoked: { equals: false }
+    try {
+      // First, fetch all partner attestations to build a map
+      const { data: partnersData } = await fetchFromEAS(`
+        query GetPartnerAttestations {
+          attestations(
+            where: {
+              schemaId: { equals: "${PARTNER_SCHEMA_UID}" }
+              revoked: { equals: false }
+            }
+          ) {
+            id
+            attester
+            recipient
+            data
           }
-        ) {
-          id
-          attester
-          recipient
-          data
         }
+      `);
+
+      console.log("Partners Data:", partnersData); // Debug log
+
+      // Create a map of partner attestation UIDs to their names
+      const partnerMap = new Map<string, string>();
+
+      if (!partnersData) {
+        console.error("No partners data received");
+        return [];
       }
-    `);
 
-    // Create a map of partner attestation UIDs to their names
-    const partnerMap = new Map<string, string>();
-    partnersData.attestations.forEach((partner: any) => {
-      try {
-        if (!partner.data || partner.data === "0x") {
-          return;
-        }
-
-        const decodedData = partnerSchemaEncoder.decodeData(partner.data);
-        const name = decodedData.find((d) => d.name === "name")?.value
-          .value as string;
-
-        if (name) {
-          partnerMap.set(partner.id, name);
-        }
-      } catch (error) {
-        // Skip invalid partner data
+      if (!partnersData.attestations) {
+        console.error("No attestations in partners data");
+        return [];
       }
-    });
 
-    // Then fetch builder attestations with pagination
-    const { data } = await fetchFromEAS(`
-      query GetBuilderAttestations {
-        attestations(
-          where: {
-            schemaId: { equals: "${BUILDER_SCHEMA_UID}" }
-            revoked: { equals: false }
-          }
-          take: 1000
-        ) {
-          id
-          attester
-          recipient
-          refUID
-          revocationTime
-          expirationTime
-          time
-          txid
-          data
-        }
-      }
-    `);
-
-    return data.attestations
-      .map((attestation: any) => {
+      partnersData.attestations.forEach((partner: any) => {
         try {
-          if (!attestation.data || attestation.data === "0x") {
-            return null;
+          if (!partner.data || partner.data === "0x") {
+            return;
           }
 
-          const decodedData = builderSchemaEncoder.decodeData(attestation.data);
-          const isBuilder = decodedData.find((d) => d.name === "isBuilder")
-            ?.value.value as boolean;
-          const context = decodedData.find((d) => d.name === "context")?.value
+          const decodedData = partnerSchemaEncoder.decodeData(partner.data);
+          const name = decodedData.find((d) => d.name === "name")?.value
             .value as string;
 
-          if (isBuilder === undefined || context === undefined) {
+          if (name) {
+            partnerMap.set(partner.id, name);
+          }
+        } catch (error) {
+          console.error("Error processing partner:", error);
+        }
+      });
+
+      // Then fetch builder attestations with pagination
+      const { data } = await fetchFromEAS(`
+        query GetBuilderAttestations {
+          attestations(
+            where: {
+              schemaId: { equals: "${BUILDER_SCHEMA_UID}" }
+              revoked: { equals: false }
+            }
+            take: 1000
+          ) {
+            id
+            attester
+            recipient
+            refUID
+            revocationTime
+            expirationTime
+            time
+            txid
+            data
+          }
+        }
+      `);
+
+      return data.attestations
+        .map((attestation: any) => {
+          try {
+            if (!attestation.data || attestation.data === "0x") {
+              return null;
+            }
+
+            const decodedData = builderSchemaEncoder.decodeData(
+              attestation.data
+            );
+            const isBuilder = decodedData.find((d) => d.name === "isBuilder")
+              ?.value.value as boolean;
+            const context = decodedData.find((d) => d.name === "context")?.value
+              .value as string;
+
+            if (isBuilder === undefined || context === undefined) {
+              return null;
+            }
+
+            const partnerName = attestation.refUID
+              ? partnerMap.get(attestation.refUID)
+              : "Unknown";
+
+            return {
+              ...attestation,
+              decodedData: {
+                isBuilder,
+                context,
+              },
+              partnerName,
+            };
+          } catch (error) {
             return null;
           }
-
-          const partnerName = attestation.refUID
-            ? partnerMap.get(attestation.refUID)
-            : "Unknown";
-
-          return {
-            ...attestation,
-            decodedData: {
-              isBuilder,
-              context,
-            },
-            partnerName,
-          };
-        } catch (error) {
-          return null;
-        }
-      })
-      .filter(
-        (
-          attestation: VerifiedBuilderAttestation | null
-        ): attestation is VerifiedBuilderAttestation => {
-          return attestation !== null && attestation.decodedData.isBuilder;
-        }
-      );
+        })
+        .filter(
+          (
+            attestation: VerifiedBuilderAttestation | null
+          ): attestation is VerifiedBuilderAttestation => {
+            return attestation !== null && attestation.decodedData.isBuilder;
+          }
+        );
+    } catch (error) {
+      console.error("Error fetching builders:", error);
+      return [];
+    }
   });
 }
 

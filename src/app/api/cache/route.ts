@@ -1,49 +1,15 @@
 import { NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
+import { metricsManager } from "./metrics";
+import type { CacheResponse, CacheErrorResponse, EASResponse } from "./types";
 
 const CACHE_REVALIDATE_SECONDS = 300; // 5 minutes
 const CACHE_TAGS = ["eas-registry"];
 const REQUEST_TIMEOUT = 5000; // 5 seconds
 
-interface CacheMetrics {
-  hits: number;
-  misses: number;
-  errors: number;
-  latency: number[];
-  lastErrors: Array<{ timestamp: string; error: string }>;
-}
-
-// In-memory metrics (resets on deployment)
-const metrics: CacheMetrics = {
-  hits: 0,
-  misses: 0,
-  errors: 0,
-  latency: [],
-  lastErrors: [],
-};
-
-// Keep only last 100 latency samples and last 10 errors
-function updateMetrics(
-  type: "hit" | "miss" | "error",
-  latency?: number,
-  error?: string
-) {
-  if (type === "hit") metrics.hits++;
-  if (type === "miss") metrics.misses++;
-  if (type === "error") {
-    metrics.errors++;
-    metrics.lastErrors.unshift({
-      timestamp: new Date().toISOString(),
-      error: error || "Unknown error",
-    });
-    if (metrics.lastErrors.length > 10) metrics.lastErrors.pop();
-  }
-  if (latency) {
-    metrics.latency.push(latency);
-    if (metrics.latency.length > 100) metrics.latency.shift();
-  }
-}
-
+/**
+ * Fetches data with a timeout
+ */
 async function fetchWithTimeout(
   url: string,
   options: RequestInit,
@@ -65,7 +31,10 @@ async function fetchWithTimeout(
   }
 }
 
-async function fetchFromEAS(query: string) {
+/**
+ * Fetches data from EAS with performance monitoring
+ */
+async function fetchFromEAS(query: string): Promise<EASResponse> {
   const start = performance.now();
 
   try {
@@ -87,32 +56,31 @@ async function fetchFromEAS(query: string) {
 
     const data = await response.json();
     const duration = performance.now() - start;
-    updateMetrics("hit", duration);
+    metricsManager.updateMetrics("hit", duration);
 
-    return {
-      data,
-      performance: {
-        latencyMs: Math.round(duration),
-        cached: true,
-      },
-    };
+    return data;
   } catch (error) {
     const duration = performance.now() - start;
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
-    updateMetrics("error", duration, errorMessage);
+    metricsManager.updateMetrics("error", duration, errorMessage);
     throw error;
   }
 }
 
+/**
+ * Cached version of EAS data fetching
+ */
 const getCachedEASData = unstable_cache(
   async (query: string) => {
     try {
-      return await fetchFromEAS(query);
+      const result = await fetchFromEAS(query);
+      return { data: result, cacheStatus: "HIT" as const };
     } catch (error) {
-      updateMetrics("miss");
+      metricsManager.updateMetrics("miss");
       // Attempt direct fetch on cache miss
-      return await fetchFromEAS(query);
+      const result = await fetchFromEAS(query);
+      return { data: result, cacheStatus: "MISS" as const };
     }
   },
   ["eas-query"],
@@ -122,7 +90,9 @@ const getCachedEASData = unstable_cache(
   }
 );
 
-// Monitoring endpoint
+/**
+ * GET endpoint for metrics
+ */
 export async function GET(request: Request) {
   const url = new URL(request.url);
 
@@ -130,38 +100,12 @@ export async function GET(request: Request) {
     return new NextResponse("Not Found", { status: 404 });
   }
 
-  const avgLatency = metrics.latency.length
-    ? Math.round(
-        metrics.latency.reduce((a, b) => a + b, 0) / metrics.latency.length
-      )
-    : 0;
-
-  const p95Latency = metrics.latency.length
-    ? Math.round(
-        metrics.latency.sort((a, b) => a - b)[
-          Math.floor(metrics.latency.length * 0.95)
-        ]
-      )
-    : 0;
-
-  return NextResponse.json({
-    cache: {
-      hits: metrics.hits,
-      misses: metrics.misses,
-      hitRate: metrics.hits / (metrics.hits + metrics.misses) || 0,
-      errors: metrics.errors,
-      errorRate: metrics.errors / (metrics.hits + metrics.misses) || 0,
-    },
-    performance: {
-      avgLatencyMs: avgLatency,
-      p95LatencyMs: p95Latency,
-      sampleSize: metrics.latency.length,
-    },
-    lastErrors: metrics.lastErrors,
-    timestamp: new Date().toISOString(),
-  });
+  return NextResponse.json(metricsManager.getMetrics());
 }
 
+/**
+ * POST endpoint for cached data retrieval
+ */
 export async function POST(request: Request) {
   const start = performance.now();
 
@@ -173,32 +117,51 @@ export async function POST(request: Request) {
     }
 
     const result = await getCachedEASData(body.query);
-    return NextResponse.json(result);
+
+    const duration = performance.now() - start;
+    const response: CacheResponse<EASResponse> = {
+      data: result.data,
+      metrics: {
+        totalTime: Date.now() - start,
+        cached: result.cacheStatus === "HIT",
+      },
+      cacheStatus: result.cacheStatus,
+    };
+
+    return NextResponse.json(response, {
+      headers: {
+        "x-cache-status": result.cacheStatus,
+        "x-cache-timestamp": new Date().toISOString(),
+        "x-cache-ttl": `${CACHE_REVALIDATE_SECONDS}s`,
+      },
+    });
   } catch (error) {
     const duration = performance.now() - start;
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
-    updateMetrics("error", duration, errorMessage);
+    metricsManager.updateMetrics("error", duration, errorMessage);
 
-    return NextResponse.json(
-      {
-        error: {
-          message: errorMessage,
-          code:
-            error instanceof Error && error.name === "AbortError"
-              ? "TIMEOUT"
-              : "INTERNAL_ERROR",
-          timestamp: new Date().toISOString(),
-        },
-        performance: {
-          latencyMs: Math.round(duration),
-          cached: false,
-        },
+    const errorResponse: CacheErrorResponse = {
+      error: {
+        message: errorMessage,
+        code:
+          error instanceof Error && error.name === "AbortError"
+            ? "TIMEOUT"
+            : "INTERNAL_ERROR",
+        timestamp: new Date().toISOString(),
       },
-      {
-        status:
-          error instanceof Error && error.name === "AbortError" ? 504 : 500,
-      }
-    );
+      performance: {
+        latencyMs: Math.round(duration),
+        cached: false,
+      },
+    };
+
+    return NextResponse.json(errorResponse, {
+      status: error instanceof Error && error.name === "AbortError" ? 504 : 500,
+      headers: {
+        "x-cache-status": "ERROR",
+        "x-cache-timestamp": new Date().toISOString(),
+      },
+    });
   }
 }

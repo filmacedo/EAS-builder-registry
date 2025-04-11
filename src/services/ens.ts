@@ -97,30 +97,23 @@ export async function resolveENS(address: string): Promise<string | null> {
 export async function resolveAddresses(
   addresses: string[]
 ): Promise<Map<string, string>> {
-  const ensMap = new Map<string, string>();
-  const batchSize = 5; // Process 5 addresses at a time
-
-  // Process addresses in batches to avoid rate limiting
-  for (let i = 0; i < addresses.length; i += batchSize) {
-    const batch = addresses.slice(i, i + batchSize);
-    const promises = batch.map(async (address) => {
-      try {
-        const name = await resolveENS(address);
-        if (name) {
-          ensMap.set(address, name);
-        }
-      } catch (error) {
-        console.error(`Error resolving ENS for ${address}:`, error);
-      }
+  try {
+    const response = await fetch("/api/ens", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ addresses }),
     });
 
-    await Promise.all(promises);
-
-    // Add a small delay between batches
-    if (i + batchSize < addresses.length) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  }
 
-  return ensMap;
+    const data = await response.json();
+    return new Map(Object.entries(data.ensMap));
+  } catch (error) {
+    console.error("Error resolving ENS names:", error);
+    return new Map();
+  }
 }
