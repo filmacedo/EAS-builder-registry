@@ -14,7 +14,10 @@ const RPC_ENDPOINTS = [
 class FallbackProvider {
   private providers: ethers.JsonRpcProvider[];
   private currentProviderIndex: number;
-  private cache: Map<string, string | null>;
+  private cache: Map<string, { value: string | null; timestamp: number }>;
+  private cacheHits: number = 0;
+  private cacheMisses: number = 0;
+  private readonly CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
   constructor() {
     this.providers = RPC_ENDPOINTS.map(
@@ -35,10 +38,15 @@ class FallbackProvider {
 
   async lookupAddress(address: string): Promise<string | null> {
     // Check cache first
-    if (this.cache.has(address)) {
-      return this.cache.get(address) || null;
+    const cached = this.cache.get(address);
+    const now = Date.now();
+
+    if (cached && now - cached.timestamp < this.CACHE_TTL) {
+      this.cacheHits++;
+      return cached.value;
     }
 
+    this.cacheMisses++;
     let attempts = 0;
     const maxAttempts = this.providers.length;
 
@@ -47,8 +55,8 @@ class FallbackProvider {
         const provider = this.providers[this.currentProviderIndex];
         const result = await provider.lookupAddress(address);
 
-        // Cache the result
-        this.cache.set(address, result);
+        // Cache the result with timestamp
+        this.cache.set(address, { value: result, timestamp: now });
 
         return result;
       } catch (error) {
@@ -64,8 +72,17 @@ class FallbackProvider {
     }
 
     // Cache negative result
-    this.cache.set(address, null);
+    this.cache.set(address, { value: null, timestamp: now });
     return null;
+  }
+
+  getCacheMetrics() {
+    return {
+      hits: this.cacheHits,
+      misses: this.cacheMisses,
+      size: this.cache.size,
+      hitRate: this.cacheHits / (this.cacheHits + this.cacheMisses) || 0,
+    };
   }
 }
 
