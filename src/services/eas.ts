@@ -63,15 +63,29 @@ async function fetchFromEAS(query: string) {
   return result.data;
 }
 
-export async function getVerificationPartners(): Promise<
-  VerificationPartnerAttestation[]
-> {
+export async function getAllAttestations() {
   return fetchWithRetry(async () => {
     const { data } = await fetchFromEAS(`
-      query GetPartnerAttestations {
-        attestations(
+      query GetAllAttestations {
+        partners: attestations(
           where: {
             schemaId: { equals: "${PARTNER_SCHEMA_UID}" }
+            revoked: { equals: false }
+          }
+        ) {
+          id
+          attester
+          recipient
+          refUID
+          revocationTime
+          expirationTime
+          time
+          txid
+          data
+        }
+        builders: attestations(
+          where: {
+            schemaId: { equals: "${BUILDER_SCHEMA_UID}" }
             revoked: { equals: false }
           }
         ) {
@@ -88,185 +102,152 @@ export async function getVerificationPartners(): Promise<
       }
     `);
 
-    // First decode the attestations
-    const decodedAttestations = data.attestations.map((attestation: any) => {
-      try {
-        if (!attestation.data || attestation.data === "0x") {
-          return {
-            ...attestation,
-            decodedData: null,
-          };
-        }
+    return data;
+  });
+}
 
-        const decodedData = partnerSchemaEncoder.decodeData(attestation.data);
-        const name = decodedData.find((d) => d.name === "name")?.value
-          .value as string;
-        const url = decodedData.find((d) => d.name === "url")?.value
-          .value as string;
+export async function getVerificationPartners(): Promise<
+  VerificationPartnerAttestation[]
+> {
+  const data = await getAllAttestations();
+  const attestations = data.partners;
 
-        return {
-          ...attestation,
-          decodedData: {
-            name,
-            url,
-          },
-        };
-      } catch (error) {
-        console.error("Error decoding partner data:", error);
+  // First decode the attestations
+  const decodedAttestations = attestations.map((attestation: any) => {
+    try {
+      if (!attestation.data || attestation.data === "0x") {
         return {
           ...attestation,
           decodedData: null,
         };
       }
-    });
 
-    // Then resolve ENS names for all partners
-    const partnerAddresses = decodedAttestations
-      .filter((a: VerificationPartnerAttestation) => a.decodedData !== null)
-      .map((a: VerificationPartnerAttestation) => a.recipient);
-    const ensMap = await resolveAddresses(partnerAddresses);
+      const decodedData = partnerSchemaEncoder.decodeData(attestation.data);
+      const name = decodedData.find((d) => d.name === "name")?.value
+        .value as string;
+      const url = decodedData.find((d) => d.name === "url")?.value
+        .value as string;
 
-    // Finally, add ENS names to the decoded attestations
-    return decodedAttestations.map(
-      (attestation: VerificationPartnerAttestation) => {
-        if (!attestation.decodedData) return attestation;
-        return {
-          ...attestation,
-          decodedData: {
-            ...attestation.decodedData,
-            ens: ensMap.get(attestation.recipient),
-          },
-        };
-      }
-    );
+      return {
+        ...attestation,
+        decodedData: {
+          name,
+          url,
+        },
+      };
+    } catch (error) {
+      console.error("Error decoding partner data:", error);
+      return {
+        ...attestation,
+        decodedData: null,
+      };
+    }
   });
+
+  // Then resolve ENS names for all partners
+  const partnerAddresses = decodedAttestations
+    .filter((a: VerificationPartnerAttestation) => a.decodedData !== null)
+    .map((a: VerificationPartnerAttestation) => a.recipient);
+  const ensMap = await resolveAddresses(partnerAddresses);
+
+  // Finally, add ENS names to the decoded attestations
+  return decodedAttestations.map(
+    (attestation: VerificationPartnerAttestation) => {
+      if (!attestation.decodedData) return attestation;
+      return {
+        ...attestation,
+        decodedData: {
+          ...attestation.decodedData,
+          ens: ensMap.get(attestation.recipient),
+        },
+      };
+    }
+  );
 }
 
 export async function getVerifiedBuilders(): Promise<
   VerifiedBuilderAttestation[]
 > {
-  return fetchWithRetry(async () => {
+  const data = await getAllAttestations();
+  const builderAttestations = data.builders;
+  const partnerAttestations = data.partners;
+
+  // Create a map of partner attestation UIDs to their names
+  const partnerMap = new Map<string, string>();
+
+  partnerAttestations.forEach((partner: any) => {
     try {
-      // First, fetch all partner attestations to build a map
-      const { data: partnersData } = await fetchFromEAS(`
-        query GetPartnerAttestations {
-          attestations(
-            where: {
-              schemaId: { equals: "${PARTNER_SCHEMA_UID}" }
-              revoked: { equals: false }
-            }
-          ) {
-            id
-            attester
-            recipient
-            data
-          }
-        }
-      `);
-
-      console.log("Partners Data:", partnersData); // Debug log
-
-      // Create a map of partner attestation UIDs to their names
-      const partnerMap = new Map<string, string>();
-
-      if (!partnersData) {
-        console.error("No partners data received");
-        return [];
+      if (!partner.data || partner.data === "0x") {
+        return;
       }
 
-      if (!partnersData.attestations) {
-        console.error("No attestations in partners data");
-        return [];
+      const decodedData = partnerSchemaEncoder.decodeData(partner.data);
+      const name = decodedData.find((d) => d.name === "name")?.value
+        .value as string;
+
+      if (name) {
+        partnerMap.set(partner.id, name);
       }
-
-      partnersData.attestations.forEach((partner: any) => {
-        try {
-          if (!partner.data || partner.data === "0x") {
-            return;
-          }
-
-          const decodedData = partnerSchemaEncoder.decodeData(partner.data);
-          const name = decodedData.find((d) => d.name === "name")?.value
-            .value as string;
-
-          if (name) {
-            partnerMap.set(partner.id, name);
-          }
-        } catch (error) {
-          console.error("Error processing partner:", error);
-        }
-      });
-
-      // Then fetch builder attestations with pagination
-      const { data } = await fetchFromEAS(`
-        query GetBuilderAttestations {
-          attestations(
-            where: {
-              schemaId: { equals: "${BUILDER_SCHEMA_UID}" }
-              revoked: { equals: false }
-            }
-            take: 1000
-          ) {
-            id
-            attester
-            recipient
-            refUID
-            revocationTime
-            expirationTime
-            time
-            txid
-            data
-          }
-        }
-      `);
-
-      return data.attestations
-        .map((attestation: any) => {
-          try {
-            if (!attestation.data || attestation.data === "0x") {
-              return null;
-            }
-
-            const decodedData = builderSchemaEncoder.decodeData(
-              attestation.data
-            );
-            const isBuilder = decodedData.find((d) => d.name === "isBuilder")
-              ?.value.value as boolean;
-            const context = decodedData.find((d) => d.name === "context")?.value
-              .value as string;
-
-            if (isBuilder === undefined || context === undefined) {
-              return null;
-            }
-
-            const partnerName = attestation.refUID
-              ? partnerMap.get(attestation.refUID)
-              : "Unknown";
-
-            return {
-              ...attestation,
-              decodedData: {
-                isBuilder,
-                context,
-              },
-              partnerName,
-            };
-          } catch (error) {
-            return null;
-          }
-        })
-        .filter(
-          (
-            attestation: VerifiedBuilderAttestation | null
-          ): attestation is VerifiedBuilderAttestation => {
-            return attestation !== null && attestation.decodedData.isBuilder;
-          }
-        );
     } catch (error) {
-      console.error("Error fetching builders:", error);
-      return [];
+      console.error("Error processing partner:", error);
     }
   });
+
+  // Process builder attestations
+  const processedAttestations = builderAttestations
+    .map((attestation: any) => {
+      try {
+        if (!attestation.data || attestation.data === "0x") {
+          return null;
+        }
+
+        const decodedData = builderSchemaEncoder.decodeData(attestation.data);
+        const isBuilder = decodedData.find((d) => d.name === "isBuilder")?.value
+          .value as boolean;
+        const context = decodedData.find((d) => d.name === "context")?.value
+          .value as string;
+
+        if (isBuilder === undefined || context === undefined) {
+          return null;
+        }
+
+        const partnerName = attestation.refUID
+          ? partnerMap.get(attestation.refUID)
+          : "Unknown";
+
+        return {
+          ...attestation,
+          decodedData: {
+            isBuilder,
+            context,
+          },
+          partnerName,
+        };
+      } catch (error) {
+        return null;
+      }
+    })
+    .filter(
+      (
+        attestation: VerifiedBuilderAttestation | null
+      ): attestation is VerifiedBuilderAttestation => {
+        return attestation !== null && attestation.decodedData.isBuilder;
+      }
+    );
+
+  // Resolve ENS names for all builders
+  const builderAddresses = processedAttestations.map(
+    (a: VerifiedBuilderAttestation) => a.recipient
+  );
+  const ensMap = await resolveAddresses(builderAddresses);
+
+  // Add ENS names to the processed attestations
+  return processedAttestations.map(
+    (attestation: VerifiedBuilderAttestation) => ({
+      ...attestation,
+      ens: ensMap.get(attestation.recipient),
+    })
+  );
 }
 
 export function getEAScanUrl(uid: string): string {

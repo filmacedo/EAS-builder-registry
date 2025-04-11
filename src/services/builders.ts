@@ -105,10 +105,17 @@ export async function processBuilderData(
   const partnerEnsMap = await resolveAddresses(partnerAddresses);
 
   // Add ENS names to partners
-  const partnersWithENS = partners.map((partner) => ({
-    ...partner,
-    ens: partnerEnsMap.get(partner.address),
-  }));
+  const partnersWithENS = partners
+    .map((partner) => ({
+      ...partner,
+      ens: partnerEnsMap.get(partner.address),
+    }))
+    // Sort by verifiedBuildersCount (highest first), then by name alphabetically
+    .sort(
+      (a, b) =>
+        b.verifiedBuildersCount - a.verifiedBuildersCount ||
+        a.name.localeCompare(b.name)
+    );
 
   // Update metrics
   const metrics = {

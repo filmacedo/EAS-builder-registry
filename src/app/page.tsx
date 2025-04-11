@@ -175,10 +175,12 @@ export default function Home() {
           onBuilderSearch={setBuilderSearchTerm}
           onPartnerSearch={setPartnerSearchTerm}
           onPartnerFilter={setSelectedPartnerId}
-          availablePartners={partners.map((p) => ({
-            id: p.attestationUID,
-            name: p.name,
-          }))}
+          availablePartners={partners
+            .map((p) => ({
+              id: p.attestationUID,
+              name: p.name,
+            }))
+            .sort((a, b) => a.name.localeCompare(b.name))}
         />
       </div>
     </div>

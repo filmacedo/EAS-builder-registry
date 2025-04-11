@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { ethers } from "ethers";
 
-// List of backup RPC endpoints
+// Use Alchemy as the main provider
+const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY || "";
+
+// List of backup RPC endpoints with API keys
 const RPC_ENDPOINTS = [
-  "https://eth.llamarpc.com",
-  "https://rpc.ankr.com/eth",
+  `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`,
   "https://ethereum.publicnode.com",
 ];
 
@@ -12,12 +14,14 @@ const RPC_ENDPOINTS = [
 class FallbackProvider {
   private providers: ethers.JsonRpcProvider[];
   private currentProviderIndex: number;
+  private cache: Map<string, string | null>;
 
   constructor() {
     this.providers = RPC_ENDPOINTS.map(
       (url) => new ethers.JsonRpcProvider(url)
     );
     this.currentProviderIndex = 0;
+    this.cache = new Map();
   }
 
   private async switchProvider() {
@@ -30,13 +34,23 @@ class FallbackProvider {
   }
 
   async lookupAddress(address: string): Promise<string | null> {
+    // Check cache first
+    if (this.cache.has(address)) {
+      return this.cache.get(address) || null;
+    }
+
     let attempts = 0;
     const maxAttempts = this.providers.length;
 
     while (attempts < maxAttempts) {
       try {
         const provider = this.providers[this.currentProviderIndex];
-        return await provider.lookupAddress(address);
+        const result = await provider.lookupAddress(address);
+
+        // Cache the result
+        this.cache.set(address, result);
+
+        return result;
       } catch (error) {
         console.warn(
           `RPC error (attempt ${attempts + 1}/${maxAttempts}):`,
@@ -48,6 +62,9 @@ class FallbackProvider {
         }
       }
     }
+
+    // Cache negative result
+    this.cache.set(address, null);
     return null;
   }
 }
@@ -65,15 +82,35 @@ export async function POST(request: Request) {
       );
     }
 
-    const ensMap = new Map<string, string>();
-    for (const address of addresses) {
-      const ensName = await provider.lookupAddress(address);
-      if (ensName) {
-        ensMap.set(address, ensName);
+    // Process addresses in parallel with a concurrency limit
+    const concurrencyLimit = 5;
+    const results = new Map<string, string>();
+
+    for (let i = 0; i < addresses.length; i += concurrencyLimit) {
+      const batch = addresses.slice(i, i + concurrencyLimit);
+      const promises = batch.map(async (address) => {
+        const ensName = await provider.lookupAddress(address);
+        if (ensName) {
+          results.set(address, ensName);
+        }
+      });
+
+      await Promise.all(promises);
+
+      // Add a small delay between batches to avoid rate limits
+      if (i + concurrencyLimit < addresses.length) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
     }
 
-    return NextResponse.json({ ensMap: Object.fromEntries(ensMap) });
+    return NextResponse.json({
+      ensMap: Object.fromEntries(results),
+      metrics: {
+        totalAddresses: addresses.length,
+        resolvedCount: results.size,
+        timestamp: new Date().toISOString(),
+      },
+    });
   } catch (error) {
     console.error("ENS resolution error:", error);
     return NextResponse.json(

@@ -6,6 +6,7 @@ import type { CacheResponse, CacheErrorResponse, EASResponse } from "./types";
 const CACHE_REVALIDATE_SECONDS = 300; // 5 minutes
 const CACHE_TAGS = ["eas-registry"];
 const REQUEST_TIMEOUT = 5000; // 5 seconds
+const CACHE_STALE_WHILE_REVALIDATE = 60 * 60; // 1 hour
 
 /**
  * Fetches data with a timeout
@@ -69,18 +70,22 @@ async function fetchFromEAS(query: string): Promise<EASResponse> {
 }
 
 /**
- * Cached version of EAS data fetching
+ * Cached version of EAS data fetching with stale-while-revalidate
  */
 const getCachedEASData = unstable_cache(
   async (query: string) => {
     try {
       const result = await fetchFromEAS(query);
-      return { data: result, cacheStatus: "HIT" as const };
+      const timestamp = Date.now();
+
+      return {
+        data: result,
+        timestamp,
+        cacheStatus: "HIT" as const,
+      };
     } catch (error) {
-      metricsManager.updateMetrics("miss");
-      // Attempt direct fetch on cache miss
-      const result = await fetchFromEAS(query);
-      return { data: result, cacheStatus: "MISS" as const };
+      metricsManager.updateMetrics("error");
+      throw error;
     }
   },
   ["eas-query"],
@@ -117,13 +122,25 @@ export async function POST(request: Request) {
     }
 
     const result = await getCachedEASData(body.query);
+    const now = Date.now();
+    const age = now - result.timestamp;
+
+    // Determine if we need background revalidation
+    const needsRevalidation = age > CACHE_REVALIDATE_SECONDS * 1000;
+
+    if (needsRevalidation && age < CACHE_STALE_WHILE_REVALIDATE * 1000) {
+      // Trigger background revalidation
+      getCachedEASData(body.query).catch(console.error);
+    }
 
     const duration = performance.now() - start;
     const response: CacheResponse<EASResponse> = {
       data: result.data,
       metrics: {
-        totalTime: Date.now() - start,
-        cached: result.cacheStatus === "HIT",
+        totalTime: duration,
+        cached: true,
+        age: age,
+        stale: needsRevalidation,
       },
       cacheStatus: result.cacheStatus,
     };
@@ -131,8 +148,10 @@ export async function POST(request: Request) {
     return NextResponse.json(response, {
       headers: {
         "x-cache-status": result.cacheStatus,
-        "x-cache-timestamp": new Date().toISOString(),
+        "x-cache-timestamp": new Date(result.timestamp).toISOString(),
         "x-cache-ttl": `${CACHE_REVALIDATE_SECONDS}s`,
+        "x-cache-age": `${Math.floor(age / 1000)}s`,
+        "Cache-Control": `s-maxage=${CACHE_REVALIDATE_SECONDS}, stale-while-revalidate=${CACHE_STALE_WHILE_REVALIDATE}`,
       },
     });
   } catch (error) {

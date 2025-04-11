@@ -62,10 +62,11 @@ export default function PartnersPage() {
             };
           })
           .filter((partner): partner is Partner => partner !== null)
-          // Sort by verification count (highest first), then by time
+          // Sort by verification count (highest first), then by name alphabetically
           .sort(
             (a, b) =>
-              b.verificationCount - a.verificationCount || a.time - b.time
+              b.verificationCount - a.verificationCount ||
+              a.name.localeCompare(b.name)
           );
 
         // Resolve ENS names for partners

@@ -2,8 +2,7 @@ import { ethers } from "ethers";
 
 // List of backup RPC endpoints
 const RPC_ENDPOINTS = [
-  "https://eth.llamarpc.com",
-  "https://rpc.ankr.com/eth",
+  `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
   "https://ethereum.publicnode.com",
 ];
 
