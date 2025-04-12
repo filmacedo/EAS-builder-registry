@@ -13,9 +13,7 @@ export default function ManifestoPage() {
         <h1 className="text-4xl font-bold mb-8">Builders Manifesto</h1>
 
         <div className="mb-12">
-          <h2 className="text-2xl font-semibold mb-6">
-            About Builder Registry & Builders Day
-          </h2>
+          <h2 className="text-2xl font-semibold mb-6">About Builders Day</h2>
           <p className="text-lg mb-4">
             In 2024, we established May 1st as Builder's Day by launching the{" "}
             <Link

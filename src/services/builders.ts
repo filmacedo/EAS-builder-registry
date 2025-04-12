@@ -24,6 +24,7 @@ export interface ProcessedPartner {
   url: string;
   attestationUID: string;
   verifiedBuildersCount: number;
+  ens?: string;
 }
 
 export interface ProcessedMetrics {
@@ -99,6 +100,23 @@ export async function processBuilderData(
         partnerBuilderCounts.get(attestation.id)?.size || 0,
     }));
 
+  // Resolve ENS names for partners
+  const partnerAddresses = partners.map((p) => p.address);
+  const partnerEnsMap = await resolveAddresses(partnerAddresses);
+
+  // Add ENS names to partners
+  const partnersWithENS = partners
+    .map((partner) => ({
+      ...partner,
+      ens: partnerEnsMap.get(partner.address),
+    }))
+    // Sort by verifiedBuildersCount (highest first), then by name alphabetically
+    .sort(
+      (a, b) =>
+        b.verifiedBuildersCount - a.verifiedBuildersCount ||
+        a.name.localeCompare(b.name)
+    );
+
   // Update metrics
   const metrics = {
     totalBuilders: builderMap.size,
@@ -106,5 +124,5 @@ export async function processBuilderData(
     totalAttestations: builderAttestations.length,
   };
 
-  return { builders, partners, metrics };
+  return { builders, partners: partnersWithENS, metrics };
 }

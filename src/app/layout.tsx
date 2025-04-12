@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { OnchainKitProvider } from "@/providers/OnchainKitProvider";
 import { Header } from "@/components/layout/Header";
 import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Builder Registry",
-  description: "A decentralized registry of verified onchain builders",
+  title: "EAS Builder Registry",
+  description: "Verified Registry of Onchain Builders",
 };
 
 export default function RootLayout({
@@ -19,9 +20,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Header />
-        <main className="container mx-auto p-4">{children}</main>
-        <Toaster />
+        <OnchainKitProvider>
+          <Header />
+          <main className="container mx-auto p-4">{children}</main>
+          <Toaster />
+        </OnchainKitProvider>
       </body>
     </html>
   );

@@ -2,131 +2,194 @@
 
 import { truncateAddress } from "@/lib/utils";
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
-
-interface Partner {
-  id: string;
-  address: string;
-  name: string;
-  url: string;
-  time: number;
-  verificationCount: number;
-  ens?: string;
-}
+import { ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
+import { ProcessedPartner } from "@/services/builders";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 interface PartnersTableProps {
-  partners: Partner[];
+  partners: ProcessedPartner[];
 }
 
 function formatUrl(url: string): string {
   try {
-    // Try to create URL object as-is
     new URL(url);
     return url;
   } catch {
-    try {
-      // Try adding https:// if no protocol
-      const urlWithProtocol = `https://${url}`;
-      new URL(urlWithProtocol);
-      return urlWithProtocol;
-    } catch {
-      // Return original if still invalid
-      return url;
-    }
+    return `https://${url}`;
   }
 }
 
 function getDisplayUrl(url: string): string {
   try {
     const parsedUrl = new URL(formatUrl(url));
-    return parsedUrl.hostname;
+    return parsedUrl.hostname.replace(/^www\./, "");
   } catch {
     return url;
   }
 }
 
-function formatDate(timestamp: number): string {
-  return new Date(timestamp * 1000).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
-
 export function PartnersTable({ partners }: PartnersTableProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Calculate pagination
+  const totalPages = Math.ceil(partners.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentPartners = partners.slice(startIndex, endIndex);
+
+  // Handle page changes
+  const handlePreviousPage = () => {
+    setCurrentPage((prev) => Math.max(1, prev - 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+  };
+
   return (
-    <div className="relative overflow-x-auto rounded-lg border">
-      <table className="w-full text-left text-sm">
-        <thead className="bg-muted/50 text-muted-foreground">
-          <tr>
-            <th scope="col" className="px-6 py-3 font-medium">
-              #
-            </th>
-            <th scope="col" className="px-6 py-3 font-medium">
-              Name
-            </th>
-            <th scope="col" className="px-6 py-3 font-medium">
-              Builders
-            </th>
-            <th scope="col" className="px-6 py-3 font-medium">
-              Joined
-            </th>
-            <th scope="col" className="px-6 py-3 font-medium">
-              Address
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {partners.map((partner, index) => (
-            <tr
-              key={partner.id}
-              className="border-t bg-white hover:bg-muted/50"
-            >
-              <td className="px-6 py-4 font-medium text-muted-foreground">
-                {index + 1}
-              </td>
-              <td className="px-6 py-4">
-                {partner.url ? (
+    <div className="rounded-md border">
+      <div className="relative">
+        <table className="w-full caption-bottom text-sm">
+          <thead className="bg-white border-b">
+            <tr className="border-b transition-colors hover:bg-muted/50">
+              <th className="h-12 px-4 text-left align-middle font-medium">
+                Partner
+              </th>
+              <th className="h-12 px-4 text-left align-middle font-medium">
+                Attester Address
+              </th>
+              <th className="h-12 px-4 text-left align-middle font-medium">
+                Builders
+              </th>
+              <th className="h-12 px-4 text-left align-middle font-medium">
+                Attestations
+              </th>
+              <th className="h-12 px-4 text-center align-middle font-medium w-20">
+                EAS
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {currentPartners.map((partner) => (
+              <tr
+                key={partner.id}
+                className="border-b transition-colors hover:bg-muted/50"
+              >
+                <td className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="relative h-10 w-10 shrink-0">
+                      <img
+                        src={`https://www.google.com/s2/favicons?domain=${partner.url}&sz=128`}
+                        alt={`${partner.name} favicon`}
+                        className="h-full w-full rounded-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = "/default-favicon.png";
+                        }}
+                      />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{partner.name}</span>
+                      {partner.url && (
+                        <Link
+                          href={formatUrl(partner.url)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-muted-foreground hover:underline inline-flex items-center gap-1"
+                        >
+                          {getDisplayUrl(partner.url)}
+                          <ExternalLink className="h-3 w-3" />
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                </td>
+                <td className="p-4">
+                  <div className="flex flex-col">
+                    {partner.ens ? (
+                      <>
+                        <Link
+                          href={`https://app.ens.domains/${partner.ens}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium hover:underline"
+                        >
+                          {partner.ens}
+                        </Link>
+                        <Link
+                          href={`https://etherscan.io/address/${partner.address}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-muted-foreground hover:underline"
+                        >
+                          {truncateAddress(partner.address)}
+                        </Link>
+                      </>
+                    ) : (
+                      <Link
+                        href={`https://etherscan.io/address/${partner.address}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium hover:underline"
+                      >
+                        {truncateAddress(partner.address)}
+                      </Link>
+                    )}
+                  </div>
+                </td>
+                <td className="p-4">
+                  <span className="font-medium">
+                    {partner.verifiedBuildersCount}
+                  </span>
+                </td>
+                <td className="p-4">
+                  <span className="font-medium">
+                    {partner.verifiedBuildersCount}
+                  </span>
+                </td>
+                <td className="p-4 text-center">
                   <Link
-                    href={formatUrl(partner.url)}
+                    href={`https://base.easscan.org/attestation/view/${partner.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 hover:underline"
+                    className="inline-flex text-muted-foreground hover:text-primary"
                   >
-                    {partner.name}
-                    <ExternalLink className="h-3 w-3" />
+                    <ExternalLink className="h-4 w-4" />
                   </Link>
-                ) : (
-                  partner.name
-                )}
-              </td>
-              <td className="px-6 py-4 font-medium">
-                {partner.verificationCount}
-              </td>
-              <td className="px-6 py-4">
-                <Link
-                  href={`https://easscan.org/attestation/view/${partner.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:underline"
-                >
-                  {formatDate(partner.time)}
-                </Link>
-              </td>
-              <td className="px-6 py-4">
-                <Link
-                  href={`https://etherscan.io/address/${partner.address}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:underline"
-                >
-                  {partner.ens || truncateAddress(partner.address)}
-                </Link>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex items-center justify-between px-4 py-3">
+        <div className="text-sm text-muted-foreground">
+          Showing {startIndex + 1}-{Math.min(endIndex, partners.length)} of{" "}
+          {partners.length} partners
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePreviousPage}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
