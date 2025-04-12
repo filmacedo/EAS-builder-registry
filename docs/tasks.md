@@ -28,6 +28,7 @@
 - [x] Add visual highlight for 50+ attestation partners
 - [x] Create step-by-step guide for partner verification
 - [x] Add partner attestation UID copy functionality
+- [x] Sort partners alphabetically in dropdown
 
 ## Pending Tasks 📝
 
@@ -66,8 +67,9 @@
 
 - [ ] Set up Talent API connection
 - [ ] Implement Builder Score fetching
-- [ ] Add Talent profile links
+- [ ] Add Builder Score to the Builders table
 - [ ] Add average builder score to Partners Leaderboard
+- [ ] Add Talent profile links
 - [ ] Add caching for Talent API responses
 
 ## Future Enhancements 🔮

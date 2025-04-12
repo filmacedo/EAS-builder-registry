@@ -51,7 +51,8 @@ export default function VerificationGuidePage() {
             address: p.recipient,
             name: p.decodedData.name,
             ens: p.decodedData.ens,
-          }));
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name));
         setPartners(processedPartners);
       } catch (error) {
         console.error("Error fetching partners:", error);
