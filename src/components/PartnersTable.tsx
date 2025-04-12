@@ -4,8 +4,6 @@ import { truncateAddress } from "@/lib/utils";
 import Link from "next/link";
 import { ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 import { ProcessedPartner } from "@/services/builders";
-import { BuilderAvatars } from "@/components/BuilderAvatars";
-import { PartnerAvatar } from "@/components/PartnerAvatar";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
@@ -18,13 +16,7 @@ function formatUrl(url: string): string {
     new URL(url);
     return url;
   } catch {
-    try {
-      const urlWithProtocol = `https://${url}`;
-      new URL(urlWithProtocol);
-      return urlWithProtocol;
-    } catch {
-      return url;
-    }
+    return `https://${url}`;
   }
 }
 
@@ -87,7 +79,17 @@ export function PartnersTable({ partners }: PartnersTableProps) {
               >
                 <td className="p-4">
                   <div className="flex items-center gap-3">
-                    <PartnerAvatar url={partner.url} name={partner.name} />
+                    <div className="relative h-10 w-10 shrink-0">
+                      <img
+                        src={`https://www.google.com/s2/favicons?domain=${partner.url}&sz=128`}
+                        alt={`${partner.name} favicon`}
+                        className="h-full w-full rounded-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = "/default-favicon.png";
+                        }}
+                      />
+                    </div>
                     <div className="flex flex-col">
                       <span className="font-medium">{partner.name}</span>
                       {partner.url && (
@@ -138,7 +140,9 @@ export function PartnersTable({ partners }: PartnersTableProps) {
                   </div>
                 </td>
                 <td className="p-4">
-                  <BuilderAvatars count={partner.verifiedBuildersCount} />
+                  <span className="font-medium">
+                    {partner.verifiedBuildersCount}
+                  </span>
                 </td>
                 <td className="p-4">
                   <span className="font-medium">
@@ -162,10 +166,10 @@ export function PartnersTable({ partners }: PartnersTableProps) {
       </div>
 
       {/* Pagination Controls */}
-      <div className="flex items-center justify-between px-4 py-4 border-t">
-        <div className="flex-1 text-sm text-muted-foreground">
-          Showing {startIndex + 1} to {Math.min(endIndex, partners.length)} of{" "}
-          {partners.length} entries
+      <div className="flex items-center justify-between px-4 py-3">
+        <div className="text-sm text-muted-foreground">
+          Showing {startIndex + 1}-{Math.min(endIndex, partners.length)} of{" "}
+          {partners.length} partners
         </div>
         <div className="flex items-center space-x-2">
           <Button
@@ -176,9 +180,6 @@ export function PartnersTable({ partners }: PartnersTableProps) {
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <div className="text-sm font-medium">
-            Page {currentPage} of {totalPages}
-          </div>
           <Button
             variant="outline"
             size="sm"

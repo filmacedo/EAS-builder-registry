@@ -2,12 +2,12 @@
 
 import { truncateAddress } from "@/lib/utils";
 import Link from "next/link";
-import { ExternalLink, UserCircle } from "lucide-react";
+import { ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 import { ProcessedBuilder } from "@/services/builders";
 import { useMemo, memo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { BuilderIdentity } from "@/components/BuilderIdentity";
 
 interface BuildersTableProps {
   builders: ProcessedBuilder[];
@@ -17,42 +17,7 @@ interface BuildersTableProps {
 const BuilderTableRow = memo(({ builder }: { builder: ProcessedBuilder }) => (
   <tr className="border-b transition-colors hover:bg-muted/50">
     <td className="p-4">
-      <div className="flex items-center gap-3">
-        <div className="relative h-10 w-10 shrink-0">
-          <UserCircle className="h-full w-full text-muted-foreground" />
-        </div>
-        <div className="flex flex-col">
-          {builder.ens ? (
-            <>
-              <Link
-                href={`https://app.ens.domains/${builder.ens}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium hover:underline"
-              >
-                {builder.ens}
-              </Link>
-              <Link
-                href={`https://etherscan.io/address/${builder.address}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-muted-foreground hover:underline"
-              >
-                {truncateAddress(builder.address)}
-              </Link>
-            </>
-          ) : (
-            <Link
-              href={`https://etherscan.io/address/${builder.address}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium hover:underline"
-            >
-              {truncateAddress(builder.address)}
-            </Link>
-          )}
-        </div>
-      </div>
+      <BuilderIdentity address={builder.address} ens={builder.ens} size="md" />
     </td>
     <td className="p-4">
       {new Date(builder.earliestAttestationDate * 1000).toLocaleDateString()}
@@ -148,11 +113,10 @@ export function BuildersTable({ builders }: BuildersTableProps) {
       </div>
 
       {/* Pagination Controls */}
-      <div className="flex items-center justify-between px-4 py-4 border-t">
-        <div className="flex-1 text-sm text-muted-foreground">
-          Showing {startIndex + 1} to{" "}
-          {Math.min(endIndex, sortedBuilders.length)} of {sortedBuilders.length}{" "}
-          entries
+      <div className="flex items-center justify-between px-4 py-3">
+        <div className="text-sm text-muted-foreground">
+          Showing {startIndex + 1}-{Math.min(endIndex, sortedBuilders.length)}{" "}
+          of {sortedBuilders.length} builders
         </div>
         <div className="flex items-center space-x-2">
           <Button
@@ -163,9 +127,6 @@ export function BuildersTable({ builders }: BuildersTableProps) {
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <div className="text-sm font-medium">
-            Page {currentPage} of {totalPages}
-          </div>
           <Button
             variant="outline"
             size="sm"
