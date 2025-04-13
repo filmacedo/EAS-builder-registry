@@ -47,13 +47,6 @@ async function fetchFromEAS(query: string) {
 
   const result = await response.json();
 
-  // Log the response for debugging
-  console.log("EAS Response:", {
-    status: response.status,
-    hasData: !!result,
-    dataShape: result ? Object.keys(result) : null,
-  });
-
   if (!result || !result.data) {
     throw new Error("Invalid response structure from cache");
   }
@@ -170,12 +163,17 @@ export async function getVerifiedBuilders(): Promise<
   const builderAttestations = data.builders;
   const partnerAttestations = data.partners;
 
-  // Create a map of partner attestation UIDs to their names
-  const partnerMap = new Map<string, string>();
+  // Create a map of valid partner attestation UIDs (only those issued by attestations.talentprotocol.eth)
+  const validPartnerMap = new Map<string, string>();
+  const TALENT_PROTOCOL_ATTESTER = "0x574D993813e5bAB85c7B7761B35C207Ad426D9cC"; // attestations.talentprotocol.eth
 
   partnerAttestations.forEach((partner: any) => {
     try {
-      if (!partner.data || partner.data === "0x") {
+      if (
+        !partner.data ||
+        partner.data === "0x" ||
+        partner.attester !== TALENT_PROTOCOL_ATTESTER
+      ) {
         return;
       }
 
@@ -184,7 +182,7 @@ export async function getVerifiedBuilders(): Promise<
         .value as string;
 
       if (name) {
-        partnerMap.set(partner.id, name);
+        validPartnerMap.set(partner.id, name);
       }
     } catch (error) {
       console.error("Error processing partner:", error);
@@ -209,9 +207,12 @@ export async function getVerifiedBuilders(): Promise<
           return null;
         }
 
-        const partnerName = attestation.refUID
-          ? partnerMap.get(attestation.refUID)
-          : "Unknown";
+        // Only include attestations that reference a valid partner
+        if (!attestation.refUID || !validPartnerMap.has(attestation.refUID)) {
+          return null;
+        }
+
+        const partnerName = validPartnerMap.get(attestation.refUID);
 
         return {
           ...attestation,
@@ -222,6 +223,7 @@ export async function getVerifiedBuilders(): Promise<
           partnerName,
         };
       } catch (error) {
+        console.error("Error processing builder attestation:", error);
         return null;
       }
     })

@@ -30,22 +30,15 @@ function getDisplayUrl(url: string): string {
 }
 
 export function PartnersTable({ partners }: PartnersTableProps) {
-  const [currentPage, setCurrentPage] = useState(1);
+  const [visibleCount, setVisibleCount] = useState(10);
   const itemsPerPage = 10;
 
-  // Calculate pagination
-  const totalPages = Math.ceil(partners.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentPartners = partners.slice(startIndex, endIndex);
+  // Get visible partners
+  const visiblePartners = partners.slice(0, visibleCount);
 
-  // Handle page changes
-  const handlePreviousPage = () => {
-    setCurrentPage((prev) => Math.max(1, prev - 1));
-  };
-
-  const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+  // Handle load more
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => prev + itemsPerPage);
   };
 
   return (
@@ -54,30 +47,30 @@ export function PartnersTable({ partners }: PartnersTableProps) {
         <table className="w-full caption-bottom text-sm">
           <thead className="bg-white border-b">
             <tr className="border-b transition-colors hover:bg-muted/50">
-              <th className="h-12 px-4 text-left align-middle font-medium">
+              <th className="h-12 px-4 text-left align-middle font-medium w-[35%]">
                 Partner
               </th>
-              <th className="h-12 px-4 text-left align-middle font-medium">
+              <th className="h-12 px-4 text-left align-middle font-medium w-[25%]">
                 Attester Address
               </th>
-              <th className="h-12 px-4 text-left align-middle font-medium">
+              <th className="h-12 px-4 text-left align-middle font-medium w-[15%]">
                 Builders
               </th>
-              <th className="h-12 px-4 text-left align-middle font-medium">
+              <th className="h-12 px-4 text-left align-middle font-medium w-[15%]">
                 Attestations
               </th>
-              <th className="h-12 px-4 text-center align-middle font-medium w-20">
+              <th className="h-12 px-4 text-center align-middle font-medium w-[10%]">
                 EAS
               </th>
             </tr>
           </thead>
           <tbody>
-            {currentPartners.map((partner) => (
+            {visiblePartners.map((partner) => (
               <tr
                 key={partner.id}
                 className="border-b transition-colors hover:bg-muted/50"
               >
-                <td className="p-4">
+                <td className="p-4 w-[35%]">
                   <div className="flex items-center gap-3">
                     <div className="relative h-10 w-10 shrink-0">
                       <img
@@ -106,7 +99,7 @@ export function PartnersTable({ partners }: PartnersTableProps) {
                     </div>
                   </div>
                 </td>
-                <td className="p-4">
+                <td className="p-4 w-[25%]">
                   <div className="flex flex-col">
                     {partner.ens ? (
                       <>
@@ -139,17 +132,17 @@ export function PartnersTable({ partners }: PartnersTableProps) {
                     )}
                   </div>
                 </td>
-                <td className="p-4">
+                <td className="p-4 w-[15%]">
                   <span className="font-medium">
                     {partner.verifiedBuildersCount}
                   </span>
                 </td>
-                <td className="p-4">
+                <td className="p-4 w-[15%]">
                   <span className="font-medium">
                     {partner.verifiedBuildersCount}
                   </span>
                 </td>
-                <td className="p-4 text-center">
+                <td className="p-4 text-center w-[10%]">
                   <Link
                     href={`https://base.easscan.org/attestation/view/${partner.id}`}
                     target="_blank"
@@ -165,31 +158,19 @@ export function PartnersTable({ partners }: PartnersTableProps) {
         </table>
       </div>
 
-      {/* Pagination Controls */}
-      <div className="flex items-center justify-between px-4 py-3">
-        <div className="text-sm text-muted-foreground">
-          Showing {startIndex + 1}-{Math.min(endIndex, partners.length)} of{" "}
-          {partners.length} partners
-        </div>
-        <div className="flex items-center space-x-2">
+      {/* Load More Button */}
+      {visibleCount < partners.length && (
+        <div className="flex items-center justify-center px-4 py-3">
           <Button
             variant="outline"
             size="sm"
-            onClick={handlePreviousPage}
-            disabled={currentPage === 1}
+            onClick={handleLoadMore}
+            className="w-full"
           >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleNextPage}
-            disabled={currentPage === totalPages}
-          >
-            <ChevronRight className="h-4 w-4" />
+            Load More
           </Button>
         </div>
-      </div>
+      )}
     </div>
   );
 }

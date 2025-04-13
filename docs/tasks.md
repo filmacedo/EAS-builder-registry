@@ -11,6 +11,11 @@
 - [x] Implement builder table with required columns
 - [x] Add search functionality for builder wallet/ENS
 - [x] Add CTAs for Talent Protocol profiles and partner applications
+- [x] Fix partner verification to ensure only attestations from approved partners are shown
+  - Added validation to check that partners are verified by attestations.talentprotocol.eth
+  - Added validation to ensure builder attestations reference valid partner attestations
+  - Fixed attester address to match actual attestations.talentprotocol.eth address (0x574D993813e5bAB85c7B7761B35C207Ad426D9cC)
+  - Cleaned up debug code and optimized implementation
 
 ### EAS Integration
 
@@ -20,6 +25,7 @@
 - [x] Create attestation display components
 - [x] Add links to EASScan for attestations
 - [x] Implement verification partner reference system
+- [x] Debug and fix attestation validation issues
 
 ### Partners Page
 

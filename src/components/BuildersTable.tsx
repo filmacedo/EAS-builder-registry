@@ -16,13 +16,13 @@ interface BuildersTableProps {
 // Memoized table row component
 const BuilderTableRow = memo(({ builder }: { builder: ProcessedBuilder }) => (
   <tr className="border-b transition-colors hover:bg-muted/50">
-    <td className="p-4">
+    <td className="p-4 w-[30%]">
       <BuilderIdentity address={builder.address} ens={builder.ens} size="md" />
     </td>
-    <td className="p-4">
+    <td className="p-4 w-[15%]">
       {new Date(builder.earliestAttestationDate * 1000).toLocaleDateString()}
     </td>
-    <td className="p-4">
+    <td className="p-4 w-[25%]">
       {builder.earliestPartnerAttestationId ? (
         <Link
           href={`https://base.easscan.org/attestation/view/${builder.earliestPartnerAttestationId}`}
@@ -37,10 +37,10 @@ const BuilderTableRow = memo(({ builder }: { builder: ProcessedBuilder }) => (
         builder.earliestPartnerName
       )}
     </td>
-    <td className="p-4">
+    <td className="p-4 w-[25%]">
       <span className="text-muted-foreground">{builder.context}</span>
     </td>
-    <td className="p-4 text-center">
+    <td className="p-4 text-center w-[5%]">
       <Link
         href={`https://base.easscan.org/attestation/view/${builder.earliestAttestationId}`}
         target="_blank"
@@ -56,7 +56,7 @@ const BuilderTableRow = memo(({ builder }: { builder: ProcessedBuilder }) => (
 BuilderTableRow.displayName = "BuilderTableRow";
 
 export function BuildersTable({ builders }: BuildersTableProps) {
-  const [currentPage, setCurrentPage] = useState(1);
+  const [visibleCount, setVisibleCount] = useState(10);
   const itemsPerPage = 10;
 
   // Sort builders by verification date (most recent first)
@@ -66,19 +66,12 @@ export function BuildersTable({ builders }: BuildersTableProps) {
     );
   }, [builders]);
 
-  // Calculate pagination
-  const totalPages = Math.ceil(sortedBuilders.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentBuilders = sortedBuilders.slice(startIndex, endIndex);
+  // Get visible builders
+  const visibleBuilders = sortedBuilders.slice(0, visibleCount);
 
-  // Handle page changes
-  const handlePreviousPage = () => {
-    setCurrentPage((prev) => Math.max(1, prev - 1));
-  };
-
-  const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+  // Handle load more
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => prev + itemsPerPage);
   };
 
   return (
@@ -87,56 +80,44 @@ export function BuildersTable({ builders }: BuildersTableProps) {
         <table className="w-full caption-bottom text-sm">
           <thead className="bg-white border-b">
             <tr className="border-b transition-colors hover:bg-muted/50">
-              <th className="h-12 px-4 text-left align-middle font-medium">
+              <th className="h-12 px-4 text-left align-middle font-medium w-[30%]">
                 Builder
               </th>
-              <th className="h-12 px-4 text-left align-middle font-medium">
+              <th className="h-12 px-4 text-left align-middle font-medium w-[15%]">
                 Verified On
               </th>
-              <th className="h-12 px-4 text-left align-middle font-medium">
+              <th className="h-12 px-4 text-left align-middle font-medium w-[25%]">
                 Verified By
               </th>
-              <th className="h-12 px-4 text-left align-middle font-medium">
+              <th className="h-12 px-4 text-left align-middle font-medium w-[25%]">
                 Context
               </th>
-              <th className="h-12 px-4 text-center align-middle font-medium w-20">
+              <th className="h-12 px-4 text-center align-middle font-medium w-[5%]">
                 EAS
               </th>
             </tr>
           </thead>
           <tbody>
-            {currentBuilders.map((builder) => (
+            {visibleBuilders.map((builder) => (
               <BuilderTableRow key={builder.id} builder={builder} />
             ))}
           </tbody>
         </table>
       </div>
 
-      {/* Pagination Controls */}
-      <div className="flex items-center justify-between px-4 py-3">
-        <div className="text-sm text-muted-foreground">
-          Showing {startIndex + 1}-{Math.min(endIndex, sortedBuilders.length)}{" "}
-          of {sortedBuilders.length} builders
-        </div>
-        <div className="flex items-center space-x-2">
+      {/* Load More Button */}
+      {visibleCount < sortedBuilders.length && (
+        <div className="flex items-center justify-center px-4 py-3">
           <Button
             variant="outline"
             size="sm"
-            onClick={handlePreviousPage}
-            disabled={currentPage === 1}
+            onClick={handleLoadMore}
+            className="w-full"
           >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleNextPage}
-            disabled={currentPage === totalPages}
-          >
-            <ChevronRight className="h-4 w-4" />
+            Load More
           </Button>
         </div>
-      </div>
+      )}
     </div>
   );
 }
