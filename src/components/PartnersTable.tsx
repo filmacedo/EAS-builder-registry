@@ -5,7 +5,8 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { ProcessedPartner } from "@/services/builders";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { resolveAddresses } from "@/services/ens";
 
 interface PartnersTableProps {
   partners: ProcessedPartner[];
@@ -80,6 +81,10 @@ const PartnerCard = ({ partner }: { partner: ProcessedPartner }) => (
 
 export function PartnersTable({ partners }: PartnersTableProps) {
   const [visibleCount, setVisibleCount] = useState(10);
+  const [loadingProgress, setLoadingProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
   const itemsPerPage = 10;
 
   // Get visible partners
@@ -89,6 +94,26 @@ export function PartnersTable({ partners }: PartnersTableProps) {
   const handleLoadMore = () => {
     setVisibleCount((prev) => prev + itemsPerPage);
   };
+
+  useEffect(() => {
+    const fetchENS = async () => {
+      const partnerAddresses = partners.map((p) => p.address);
+      const ensMap = await resolveAddresses(partnerAddresses, {
+        onProgress: setLoadingProgress,
+      });
+
+      // Update partners with ENS names
+      const partnersWithENS = partners.map((partner) => ({
+        ...partner,
+        ens: ensMap.get(partner.address),
+      }));
+
+      setPartners(partnersWithENS);
+      setLoadingProgress(null);
+    };
+
+    fetchENS();
+  }, [partners]);
 
   return (
     <div className="rounded-md border">
@@ -213,6 +238,13 @@ export function PartnersTable({ partners }: PartnersTableProps) {
           <Button variant="outline" size="sm" onClick={handleLoadMore}>
             Load More
           </Button>
+        </div>
+      )}
+
+      {loadingProgress && (
+        <div className="text-sm text-muted-foreground">
+          Resolving ENS names... {loadingProgress.current}/
+          {loadingProgress.total}
         </div>
       )}
     </div>
