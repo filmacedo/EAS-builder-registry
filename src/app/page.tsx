@@ -11,6 +11,7 @@ import {
   ProcessedPartner,
   ProcessedMetrics,
 } from "@/services/builders";
+import { LoadingState } from "@/components/LoadingState";
 
 export default function Home() {
   const [builders, setBuilders] = useState<ProcessedBuilder[]>([]);
@@ -33,22 +34,52 @@ export default function Home() {
   const [selectedPartnerId, setSelectedPartnerId] = useState<string | null>(
     null
   );
+  const [loadingProgress, setLoadingProgress] = useState({
+    total: 0,
+    loaded: 0,
+  });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setError(null);
-        // Fetch data from EAS
-        const [partnerAttestations, builderAttestations] = await Promise.all([
-          getVerificationPartners(),
-          getVerifiedBuilders(),
-        ]);
+
+        // Start with initial loading state
+        setLoadingProgress({
+          total: 100, // Use percentage-based progress for initial loading
+          loaded: 0,
+        });
+
+        // Fetch partner attestations first
+        const partnerAttestations = await getVerificationPartners();
+        setLoadingProgress((prev) => ({
+          ...prev,
+          loaded: 30, // 30% progress after partners load
+        }));
+
+        // Fetch builder attestations
+        const builderAttestations = await getVerifiedBuilders();
+        setLoadingProgress((prev) => ({
+          ...prev,
+          loaded: 60, // 60% progress after builders load
+        }));
 
         // Process the data
+        setLoadingProgress((prev) => ({
+          ...prev,
+          loaded: 80, // 80% progress during data processing
+        }));
+
         const { builders, partners, metrics } = await processBuilderData(
           builderAttestations,
           partnerAttestations
         );
+
+        // Update state with processed data
+        setLoadingProgress((prev) => ({
+          ...prev,
+          loaded: 100, // 100% progress when complete
+        }));
 
         setBuilders(builders);
         setFilteredBuilders(builders);
@@ -112,9 +143,10 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-4">
-        Loading onchain attestations...
-      </div>
+      <LoadingState
+        totalAttestations={loadingProgress.total}
+        loadedAttestations={loadingProgress.loaded}
+      />
     );
   }
 

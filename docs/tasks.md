@@ -16,6 +16,14 @@
   - Added validation to ensure builder attestations reference valid partner attestations
   - Fixed attester address to match actual attestations.talentprotocol.eth address (0x574D993813e5bAB85c7B7761B35C207Ad426D9cC)
   - Cleaned up debug code and optimized implementation
+- [x] Improve loading state with progress bar and attestation count
+  - Added LoadingState component with progress bar
+  - Implemented attestation count tracking
+  - Updated both home and partners pages to use new loading state
+  - Added shadcn Progress component for loading indicator
+  - Improved progress tracking with step-by-step updates
+  - Added note about initial load time
+  - Implemented simulated progress for better UX
 
 ### EAS Integration
 
@@ -112,34 +120,6 @@
 - [ ] Implement proper error handling
 - [ ] Add accessibility improvements
 - [ ] Optimize performance
-
-## Features
-
-- [ ] Add search functionality
-- [ ] Implement filtering
-- [ ] Add pagination
-- [ ] Add sorting
-
-## UI/UX
-
-- [ ] Add loading states
-- [ ] Add error handling
-- [ ] Add empty states
-- [ ] Add tooltips
-
-## Testing
-
-- [ ] Add unit tests
-- [ ] Add integration tests
-- [ ] Add accessibility tests
-- [ ] Add performance tests
-
-## Documentation
-
-- [ ] Add API documentation
-- [ ] Add user documentation
-- [ ] Add developer documentation
-- [ ] Add deployment documentation
 
 ## Notes
 
