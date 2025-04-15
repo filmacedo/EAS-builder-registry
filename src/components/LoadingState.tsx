@@ -15,29 +15,26 @@ export function LoadingState({
   useEffect(() => {
     // If we have actual progress data, use it
     if (totalAttestations && loadedAttestations) {
-      const calculatedProgress = Math.min(
+      const targetProgress = Math.min(
         Math.round((loadedAttestations / totalAttestations) * 100),
         100
       );
-      // Smoothly animate to the target progress
-      const step = (calculatedProgress - progress) / 10;
-      if (Math.abs(step) > 0.1) {
+
+      // Only update if the new progress is higher than current
+      if (targetProgress > progress) {
+        // Smoothly animate to the target progress
+        const step = (targetProgress - progress) / 10;
         const interval = setInterval(() => {
           setProgress((prev) => {
             const next = prev + step;
-            if (
-              (step > 0 && next >= calculatedProgress) ||
-              (step < 0 && next <= calculatedProgress)
-            ) {
+            if (next >= targetProgress) {
               clearInterval(interval);
-              return calculatedProgress;
+              return targetProgress;
             }
             return next;
           });
         }, 50);
         return () => clearInterval(interval);
-      } else {
-        setProgress(calculatedProgress);
       }
     } else {
       // If no progress data available, simulate progress with micro-increments

@@ -200,7 +200,7 @@ export default function Home() {
       <Metrics data={metrics} />
 
       <div className="space-y-6">
-        <h2 className="text-2xl font-mono">Onchain Builder Registry</h2>
+        <h2 className="text-2xl font-semibold">Builder Registry</h2>
         <RegistryTabs
           builders={filteredBuilders}
           partners={filteredPartners}

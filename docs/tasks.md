@@ -24,6 +24,9 @@
   - Improved progress tracking with step-by-step updates
   - Added note about initial load time
   - Implemented simulated progress for better UX
+- [x] Improve table UI components
+  - Made Load More buttons more compact and centered
+  - Removed full-width style for better visual hierarchy
 
 ### EAS Integration
 

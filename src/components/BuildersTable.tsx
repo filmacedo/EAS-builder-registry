@@ -167,14 +167,9 @@ export function BuildersTable({ builders }: BuildersTableProps) {
       </div>
 
       {/* Load More Button */}
-      {visibleCount < sortedBuilders.length && (
+      {visibleCount < builders.length && (
         <div className="flex items-center justify-center px-4 py-3 border-t">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleLoadMore}
-            className="w-full"
-          >
+          <Button variant="outline" size="sm" onClick={handleLoadMore}>
             Load More
           </Button>
         </div>
