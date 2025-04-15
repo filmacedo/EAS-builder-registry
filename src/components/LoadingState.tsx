@@ -19,24 +19,45 @@ export function LoadingState({
         Math.round((loadedAttestations / totalAttestations) * 100),
         100
       );
-      setProgress(calculatedProgress);
+      // Smoothly animate to the target progress
+      const step = (calculatedProgress - progress) / 10;
+      if (Math.abs(step) > 0.1) {
+        const interval = setInterval(() => {
+          setProgress((prev) => {
+            const next = prev + step;
+            if (
+              (step > 0 && next >= calculatedProgress) ||
+              (step < 0 && next <= calculatedProgress)
+            ) {
+              clearInterval(interval);
+              return calculatedProgress;
+            }
+            return next;
+          });
+        }, 50);
+        return () => clearInterval(interval);
+      } else {
+        setProgress(calculatedProgress);
+      }
     } else {
-      // If no progress data available, simulate progress
+      // If no progress data available, simulate progress with micro-increments
       const interval = setInterval(() => {
         setProgress((prevProgress) => {
+          // Use smaller increments and slow down as we get higher
+          const increment = Math.max(0.2, (90 - prevProgress) / 50);
+
           // Slowly increase progress up to 90%
-          // The remaining 10% will be filled when data actually loads
           if (prevProgress >= 90) {
             clearInterval(interval);
             return 90;
           }
-          return prevProgress + 1;
+          return Math.min(90, prevProgress + increment);
         });
-      }, 100); // Update every 100ms
+      }, 50); // Update more frequently (every 50ms)
 
       return () => clearInterval(interval);
     }
-  }, [totalAttestations, loadedAttestations]);
+  }, [totalAttestations, loadedAttestations, progress]);
 
   return (
     <div className="container mx-auto p-4 space-y-4">
