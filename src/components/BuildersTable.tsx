@@ -2,7 +2,7 @@
 
 import { truncateAddress } from "@/lib/utils";
 import Link from "next/link";
-import { ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { ProcessedBuilder } from "@/services/builders";
 import { useMemo, memo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -13,16 +13,13 @@ interface BuildersTableProps {
   builders: ProcessedBuilder[];
 }
 
-// Memoized table row component
+// Memoized table row component for desktop view
 const BuilderTableRow = memo(({ builder }: { builder: ProcessedBuilder }) => (
   <tr className="border-b transition-colors hover:bg-muted/50">
     <td className="p-4 w-[30%]">
       <BuilderIdentity address={builder.address} ens={builder.ens} size="md" />
     </td>
     <td className="p-4 w-[15%]">
-      {new Date(builder.earliestAttestationDate * 1000).toLocaleDateString()}
-    </td>
-    <td className="p-4 w-[25%]">
       {builder.earliestPartnerAttestationId ? (
         <Link
           href={`https://base.easscan.org/attestation/view/${builder.earliestPartnerAttestationId}`}
@@ -37,7 +34,12 @@ const BuilderTableRow = memo(({ builder }: { builder: ProcessedBuilder }) => (
         builder.earliestPartnerName
       )}
     </td>
-    <td className="p-4 w-[25%]">
+    <td className="p-4 w-[15%]">
+      <span className="text-muted-foreground">
+        {new Date(builder.earliestAttestationDate * 1000).toLocaleDateString()}
+      </span>
+    </td>
+    <td className="p-4 w-[35%]">
       <span className="text-muted-foreground">{builder.context}</span>
     </td>
     <td className="p-4 text-center w-[5%]">
@@ -54,6 +56,57 @@ const BuilderTableRow = memo(({ builder }: { builder: ProcessedBuilder }) => (
 ));
 
 BuilderTableRow.displayName = "BuilderTableRow";
+
+// Mobile card component
+const BuilderCard = memo(({ builder }: { builder: ProcessedBuilder }) => (
+  <div className="p-4 border-b last:border-b-0">
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <BuilderIdentity
+          address={builder.address}
+          ens={builder.ens}
+          size="md"
+        />
+        <Link
+          href={`https://base.easscan.org/attestation/view/${builder.earliestAttestationId}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-muted-foreground hover:text-primary"
+        >
+          <ExternalLink className="h-4 w-4" />
+        </Link>
+      </div>
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Verified By:</span>
+          {builder.earliestPartnerAttestationId ? (
+            <Link
+              href={`https://base.easscan.org/attestation/view/${builder.earliestPartnerAttestationId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Badge variant="partner" className="cursor-pointer">
+                {builder.earliestPartnerName}
+              </Badge>
+            </Link>
+          ) : (
+            <span className="text-sm">{builder.earliestPartnerName}</span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Verified On:</span>
+          <span className="text-sm">
+            {new Date(
+              builder.earliestAttestationDate * 1000
+            ).toLocaleDateString()}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+));
+
+BuilderCard.displayName = "BuilderCard";
 
 export function BuildersTable({ builders }: BuildersTableProps) {
   const [visibleCount, setVisibleCount] = useState(10);
@@ -76,7 +129,8 @@ export function BuildersTable({ builders }: BuildersTableProps) {
 
   return (
     <div className="rounded-md border">
-      <div className="relative">
+      {/* Desktop view */}
+      <div className="relative hidden md:block">
         <table className="w-full caption-bottom text-sm">
           <thead className="bg-white border-b">
             <tr className="border-b transition-colors hover:bg-muted/50">
@@ -84,12 +138,12 @@ export function BuildersTable({ builders }: BuildersTableProps) {
                 Builder
               </th>
               <th className="h-12 px-4 text-left align-middle font-medium w-[15%]">
-                Verified On
-              </th>
-              <th className="h-12 px-4 text-left align-middle font-medium w-[25%]">
                 Verified By
               </th>
-              <th className="h-12 px-4 text-left align-middle font-medium w-[25%]">
+              <th className="h-12 px-4 text-left align-middle font-medium w-[15%]">
+                Verified On
+              </th>
+              <th className="h-12 px-4 text-left align-middle font-medium w-[35%]">
                 Context
               </th>
               <th className="h-12 px-4 text-center align-middle font-medium w-[5%]">
@@ -105,9 +159,16 @@ export function BuildersTable({ builders }: BuildersTableProps) {
         </table>
       </div>
 
+      {/* Mobile view */}
+      <div className="md:hidden">
+        {visibleBuilders.map((builder) => (
+          <BuilderCard key={builder.id} builder={builder} />
+        ))}
+      </div>
+
       {/* Load More Button */}
       {visibleCount < sortedBuilders.length && (
-        <div className="flex items-center justify-center px-4 py-3">
+        <div className="flex items-center justify-center px-4 py-3 border-t">
           <Button
             variant="outline"
             size="sm"

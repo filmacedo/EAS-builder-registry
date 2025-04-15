@@ -10,6 +10,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "EAS Builder Registry",
   description: "Verified Registry of Onchain Builders",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
 };
 
 export default function RootLayout({
@@ -22,7 +23,9 @@ export default function RootLayout({
       <body className={inter.className}>
         <OnchainKitProvider>
           <Header />
-          <main className="container mx-auto p-4">{children}</main>
+          <main className="container mx-auto px-4 py-6 md:py-8">
+            {children}
+          </main>
           <Toaster />
         </OnchainKitProvider>
       </body>

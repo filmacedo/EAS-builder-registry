@@ -127,18 +127,18 @@ export default function PartnersPage() {
       </div>
 
       <div className="rounded-lg border-l-4 border-l-blue-500 bg-blue-50 p-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row md:items-center gap-4 md:justify-between">
           <div className="space-y-1">
             <h3 className="font-medium">Already a Verification Partner?</h3>
             <p className="text-sm text-muted-foreground">
               Start verifying builders in your community using our step-by-step
               guide.
-              <br />
+              <br className="hidden md:block" />
               Attest before April 17th to be featured in the Times Square ad.
             </p>
           </div>
-          <Link href="/partners/guide">
-            <Button>Verify Builders</Button>
+          <Link href="/partners/guide" className="shrink-0">
+            <Button className="w-full md:w-auto">Verify Builders</Button>
           </Link>
         </div>
       </div>
