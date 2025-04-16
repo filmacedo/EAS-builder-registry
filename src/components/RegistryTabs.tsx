@@ -42,8 +42,8 @@ export function RegistryTabs({
     >
       <div className="flex flex-col space-y-4">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="builders">vBuilders</TabsTrigger>
-          <TabsTrigger value="partners">vPartners</TabsTrigger>
+          <TabsTrigger value="builders">Builders</TabsTrigger>
+          <TabsTrigger value="partners">Partners</TabsTrigger>
         </TabsList>
 
         <div className="flex flex-col md:flex-row gap-4">

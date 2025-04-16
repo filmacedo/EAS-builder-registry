@@ -24,9 +24,6 @@
   - Improved progress tracking with step-by-step updates
   - Added note about initial load time
   - Implemented simulated progress for better UX
-- [x] Improve table UI components
-  - Made Load More buttons more compact and centered
-  - Removed full-width style for better visual hierarchy
 
 ### EAS Integration
 
@@ -123,6 +120,34 @@
 - [ ] Implement proper error handling
 - [ ] Add accessibility improvements
 - [ ] Optimize performance
+
+## Features
+
+- [ ] Add search functionality
+- [ ] Implement filtering
+- [ ] Add pagination
+- [ ] Add sorting
+
+## UI/UX
+
+- [ ] Add loading states
+- [ ] Add error handling
+- [ ] Add empty states
+- [ ] Add tooltips
+
+## Testing
+
+- [ ] Add unit tests
+- [ ] Add integration tests
+- [ ] Add accessibility tests
+- [ ] Add performance tests
+
+## Documentation
+
+- [ ] Add API documentation
+- [ ] Add user documentation
+- [ ] Add developer documentation
+- [ ] Add deployment documentation
 
 ## Notes
 

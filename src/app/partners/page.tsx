@@ -6,7 +6,6 @@ import { getVerificationPartners, getVerifiedBuilders } from "@/services/eas";
 import { resolveAddresses } from "@/services/ens";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { LoadingState } from "@/components/LoadingState";
 
 interface Partner {
   id: string;
@@ -24,41 +23,16 @@ export default function PartnersPage() {
   const [partners, setPartners] = useState<Partner[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [loadingProgress, setLoadingProgress] = useState({
-    total: 0,
-    loaded: 0,
-  });
 
   useEffect(() => {
     const fetchPartners = async () => {
       try {
         setError(null);
-
-        // Start with initial loading state
-        setLoadingProgress({
-          total: 100, // Use percentage-based progress for initial loading
-          loaded: 0,
-        });
-
-        // Fetch partner attestations first
-        const partnerAttestations = await getVerificationPartners();
-        setLoadingProgress((prev) => ({
-          ...prev,
-          loaded: 30, // 30% progress after partners load
-        }));
-
-        // Fetch builder attestations
-        const builderAttestations = await getVerifiedBuilders();
-        setLoadingProgress((prev) => ({
-          ...prev,
-          loaded: 60, // 60% progress after builders load
-        }));
-
-        // Process data
-        setLoadingProgress((prev) => ({
-          ...prev,
-          loaded: 80, // 80% progress during data processing
-        }));
+        // Fetch partners and builders from EAS
+        const [partnerAttestations, builderAttestations] = await Promise.all([
+          getVerificationPartners(),
+          getVerifiedBuilders(),
+        ]);
 
         // Create a map to count verifications per partner
         const verificationCounts = new Map<string, number>();
@@ -88,6 +62,7 @@ export default function PartnersPage() {
             };
           })
           .filter((partner): partner is Partner => partner !== null)
+          // Sort by verification count (highest first), then by name alphabetically
           .sort(
             (a, b) =>
               b.verificationCount - a.verificationCount ||
@@ -102,12 +77,6 @@ export default function PartnersPage() {
         const partnersWithENS = processedPartners.map((partner) => ({
           ...partner,
           ens: ensMap.get(partner.address),
-        }));
-
-        // Update state with processed data
-        setLoadingProgress((prev) => ({
-          ...prev,
-          loaded: 100, // 100% progress when complete
         }));
 
         setPartners(partnersWithENS);
@@ -127,10 +96,9 @@ export default function PartnersPage() {
 
   if (loading) {
     return (
-      <LoadingState
-        totalAttestations={loadingProgress.total}
-        loadedAttestations={loadingProgress.loaded}
-      />
+      <div className="container mx-auto p-4">
+        Loading onchain attestations...
+      </div>
     );
   }
 
