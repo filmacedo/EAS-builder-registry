@@ -1,10 +1,11 @@
 import { ethers } from "ethers";
 
-// List of public RPC endpoints
+// List of CORS-enabled public RPC endpoints
 const RPC_ENDPOINTS = [
-  "https://ethereum.publicnode.com",
   "https://eth.llamarpc.com",
   "https://rpc.ankr.com/eth",
+  "https://cloudflare-eth.com",
+  "https://ethereum.publicnode.com",
 ];
 
 // Initialize provider with fallback functionality
@@ -75,18 +76,26 @@ export async function resolveAddresses(
   let processedCount = 0;
 
   // Process addresses in parallel with a concurrency limit
-  const concurrencyLimit = 10; // Increased from 3 to 10
-  const batchDelay = 50; // Reduced from 200ms to 50ms
+  const concurrencyLimit = 10;
+  const batchDelay = 50;
 
   for (let i = 0; i < totalAddresses; i += concurrencyLimit) {
     const batch = addresses.slice(i, i + concurrencyLimit);
     const promises = batch.map(async (address) => {
-      const ensName = await fallbackProvider.lookupAddress(address);
-      if (ensName) {
-        results.set(address, ensName);
+      try {
+        const ensName = await fallbackProvider.lookupAddress(address);
+        if (ensName) {
+          results.set(address, ensName);
+        }
+      } catch (error) {
+        console.warn(`Failed to resolve ENS for ${address}:`, error);
+      } finally {
+        processedCount++;
+        options.onProgress?.({
+          current: processedCount,
+          total: totalAddresses,
+        });
       }
-      processedCount++;
-      options.onProgress?.({ current: processedCount, total: totalAddresses });
     });
 
     await Promise.all(promises);
