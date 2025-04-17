@@ -4,7 +4,7 @@ import { truncateAddress } from "@/lib/utils";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { ProcessedBuilder } from "@/services/builders";
-import { useMemo, memo, useState } from "react";
+import { useMemo, memo, useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BuilderIdentity } from "@/components/BuilderIdentity";
@@ -14,6 +14,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { enrichBuildersWithNames } from "@/services/builders";
 
 interface BuildersTableProps {
   builders: ProcessedBuilder[];
@@ -145,6 +146,10 @@ BuilderCard.displayName = "BuilderCard";
 
 export function BuildersTable({ builders }: BuildersTableProps) {
   const [visibleCount, setVisibleCount] = useState(10);
+  const [enrichedBuilders, setEnrichedBuilders] = useState<ProcessedBuilder[]>(
+    []
+  );
+  const [isLoading, setIsLoading] = useState(false);
   const itemsPerPage = 10;
 
   // Sort builders by verification date (most recent first)
@@ -155,11 +160,35 @@ export function BuildersTable({ builders }: BuildersTableProps) {
   }, [builders]);
 
   // Get visible builders
-  const visibleBuilders = sortedBuilders.slice(0, visibleCount);
+  const visibleBuilders = useMemo(() => {
+    return sortedBuilders.slice(0, visibleCount);
+  }, [sortedBuilders, visibleCount]);
+
+  // Load enriched data for visible builders
+  useEffect(() => {
+    const loadEnrichedData = async () => {
+      setIsLoading(true);
+      try {
+        const enriched = await enrichBuildersWithNames(
+          visibleBuilders,
+          0,
+          visibleBuilders.length
+        );
+        setEnrichedBuilders(enriched);
+      } catch (error) {
+        console.error("Error loading enriched builder data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadEnrichedData();
+  }, [visibleCount, builders]);
 
   // Handle load more
-  const handleLoadMore = () => {
-    setVisibleCount((prev) => prev + itemsPerPage);
+  const handleLoadMore = async () => {
+    const newVisibleCount = visibleCount + itemsPerPage;
+    setVisibleCount(newVisibleCount);
   };
 
   return (
@@ -190,7 +219,7 @@ export function BuildersTable({ builders }: BuildersTableProps) {
             </tr>
           </thead>
           <tbody>
-            {visibleBuilders.map((builder) => (
+            {enrichedBuilders.map((builder) => (
               <BuilderTableRow key={builder.id} builder={builder} />
             ))}
           </tbody>
@@ -199,7 +228,7 @@ export function BuildersTable({ builders }: BuildersTableProps) {
 
       {/* Mobile view */}
       <div className="md:hidden">
-        {visibleBuilders.map((builder) => (
+        {enrichedBuilders.map((builder) => (
           <BuilderCard key={builder.id} builder={builder} />
         ))}
       </div>
@@ -207,8 +236,13 @@ export function BuildersTable({ builders }: BuildersTableProps) {
       {/* Load More Button */}
       {visibleCount < builders.length && (
         <div className="flex items-center justify-center px-4 py-3 border-t">
-          <Button variant="outline" size="sm" onClick={handleLoadMore}>
-            Load More
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleLoadMore}
+            disabled={isLoading}
+          >
+            {isLoading ? "Loading..." : "Load More"}
           </Button>
         </div>
       )}

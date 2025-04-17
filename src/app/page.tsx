@@ -38,13 +38,13 @@ export default function Home() {
     const fetchData = async () => {
       try {
         setError(null);
-        // Fetch data from EAS
+        setLoading(true);
+
         const [partnerAttestations, builderAttestations] = await Promise.all([
           getVerificationPartners(),
           getVerifiedBuilders(),
         ]);
 
-        // Process the data
         const { builders, partners, metrics } = await processBuilderData(
           builderAttestations,
           partnerAttestations
@@ -56,6 +56,7 @@ export default function Home() {
         setFilteredPartners(partners);
         setMetrics(metrics);
       } catch (error) {
+        console.error("Error fetching data:", error);
         setError(
           error instanceof Error
             ? error.message
@@ -113,7 +114,14 @@ export default function Home() {
   if (loading) {
     return (
       <div className="container mx-auto p-4">
-        Loading onchain attestations...
+        <div className="flex flex-col items-center text-center space-y-6 py-16">
+          <h1 className="text-4xl font-bold max-w-2xl">
+            Verified Registry of Onchain Builders
+          </h1>
+          <p className="text-muted-foreground">
+            Loading onchain attestations...
+          </p>
+        </div>
       </div>
     );
   }

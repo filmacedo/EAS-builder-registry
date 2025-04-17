@@ -2,8 +2,8 @@ import {
   VerifiedBuilderAttestation,
   VerificationPartnerAttestation,
 } from "@/types";
-import { resolveAddresses } from "./ens";
-import { getTalentScore, getTalentProfile } from "./talent";
+import { resolveAddresses, resolveENS } from "./ens";
+import { getTalentDataBatch, TalentProfile } from "./talent";
 
 export interface ProcessedBuilder {
   id: string;
@@ -38,6 +38,29 @@ export interface ProcessedMetrics {
   totalAttestations: number;
 }
 
+export interface Builder {
+  address: string;
+  ensName?: string;
+  talentScore?: number;
+  talentProfile?: TalentProfile | null;
+  // Add other builder properties as needed
+}
+
+export interface BuilderScore {
+  address: string;
+  score: number;
+}
+
+export interface BuilderProfile {
+  address: string;
+  profile: TalentProfile;
+}
+
+export interface TalentData {
+  scores: BuilderScore[];
+  profiles: BuilderProfile[];
+}
+
 export async function processBuilderData(
   builderAttestations: VerifiedBuilderAttestation[],
   partnerAttestations: VerificationPartnerAttestation[]
@@ -46,112 +69,160 @@ export async function processBuilderData(
   partners: ProcessedPartner[];
   metrics: ProcessedMetrics;
 }> {
-  // Create a map to count builders per partner
-  const partnerBuilderCounts = new Map<string, Set<string>>();
-
-  // Process builder attestations
-  const builderMap = new Map<string, ProcessedBuilder>();
-  builderAttestations.forEach((attestation) => {
-    // Track unique builders per partner
-    if (attestation.refUID) {
-      const builders =
-        partnerBuilderCounts.get(attestation.refUID) || new Set();
-      builders.add(attestation.recipient);
-      partnerBuilderCounts.set(attestation.refUID, builders);
-    }
-
-    const existingBuilder = builderMap.get(attestation.recipient);
-    if (
-      !existingBuilder ||
-      attestation.time < existingBuilder.earliestAttestationDate
-    ) {
-      builderMap.set(attestation.recipient, {
+  try {
+    // Process partners first
+    const partners: ProcessedPartner[] = partnerAttestations.map(
+      (attestation) => ({
         id: attestation.id,
         address: attestation.recipient as `0x${string}`,
-        totalVerifications: 1,
-        earliestAttestationId: attestation.id,
-        earliestAttestationDate: attestation.time,
-        earliestPartnerName: attestation.partnerName || "Unknown",
-        earliestPartnerAttestationId: attestation.refUID,
-        context: attestation.decodedData.context || null,
-        attestations: [attestation],
-        builderScore: null,
-      });
-    } else {
-      existingBuilder.totalVerifications++;
-      existingBuilder.attestations.push(attestation);
-    }
-  });
-
-  // Resolve ENS names for all builders
-  const builderAddresses = Array.from(builderMap.keys());
-  const ensMap = await resolveAddresses(builderAddresses);
-
-  // Fetch builder scores and profiles for all builders
-  const builderData = await Promise.all(
-    builderAddresses.map(async (address) => {
-      const [score, profile] = await Promise.all([
-        getTalentScore(address),
-        getTalentProfile(address),
-      ]);
-      return { address, score, profile };
-    })
-  );
-
-  // Create maps for builder scores and profiles
-  const builderScoreMap = new Map(
-    builderData.map(({ address, score }) => [address, score])
-  );
-  const builderProfileMap = new Map(
-    builderData.map(({ address, profile }) => [address, profile])
-  );
-
-  // Update builders with ENS names, scores, and profiles
-  const builders = Array.from(builderMap.values()).map((builder) => ({
-    ...builder,
-    ens: ensMap.get(builder.address) || undefined,
-    builderScore: builderScoreMap.get(builder.address) || null,
-    name: builderProfileMap.get(builder.address)?.name || null,
-    displayName: builderProfileMap.get(builder.address)?.display_name || null,
-    imageUrl: builderProfileMap.get(builder.address)?.image_url || null,
-  }));
-
-  // Process partner attestations
-  const partners = partnerAttestations
-    .filter((attestation) => attestation.decodedData !== null)
-    .map((attestation) => ({
-      id: attestation.id,
-      address: attestation.recipient as `0x${string}`,
-      name: attestation.decodedData!.name,
-      url: attestation.decodedData!.url,
-      attestationUID: attestation.id,
-      verifiedBuildersCount:
-        partnerBuilderCounts.get(attestation.id)?.size || 0,
-    }));
-
-  // Resolve ENS names for partners
-  const partnerAddresses = partners.map((p) => p.address);
-  const partnerEnsMap = await resolveAddresses(partnerAddresses);
-
-  // Add ENS names to partners
-  const partnersWithENS = partners
-    .map((partner) => ({
-      ...partner,
-      ens: partnerEnsMap.get(partner.address),
-    }))
-    // Sort by verifiedBuildersCount (highest first), then by name alphabetically
-    .sort(
-      (a, b) =>
-        b.verifiedBuildersCount - a.verifiedBuildersCount ||
-        a.name.localeCompare(b.name)
+        name: attestation.decodedData?.name || "",
+        url: attestation.decodedData?.url || "",
+        attestationUID: attestation.id,
+        verifiedBuildersCount: 0,
+        ens: attestation.decodedData?.ens,
+      })
     );
 
-  // Update metrics
-  const metrics = {
-    totalBuilders: builderMap.size,
-    totalPartners: partners.length,
-    totalAttestations: builderAttestations.length,
-  };
+    // Create a map for quick partner lookup
+    const partnerMap = new Map(partners.map((p) => [p.attestationUID, p]));
 
-  return { builders, partners: partnersWithENS, metrics };
+    // Create a map to consolidate builders by address
+    const builderMap = new Map<string, ProcessedBuilder>();
+
+    // Process builder attestations
+    builderAttestations.forEach((attestation) => {
+      const address = attestation.recipient as `0x${string}`;
+      const existingBuilder = builderMap.get(address);
+
+      if (existingBuilder) {
+        // Update existing builder
+        existingBuilder.attestations.push(attestation);
+        existingBuilder.totalVerifications++;
+
+        // Update earliest attestation if this one is earlier
+        if (attestation.time < existingBuilder.earliestAttestationDate) {
+          existingBuilder.earliestAttestationDate = attestation.time;
+          existingBuilder.earliestAttestationId = attestation.id;
+          existingBuilder.earliestPartnerName = attestation.partnerName || "";
+          existingBuilder.earliestPartnerAttestationId = attestation.refUID;
+          existingBuilder.context = attestation.decodedData?.context || null;
+        }
+      } else {
+        // Create new builder
+        builderMap.set(address, {
+          id: attestation.id,
+          address,
+          totalVerifications: 1,
+          earliestAttestationId: attestation.id,
+          earliestAttestationDate: attestation.time,
+          earliestPartnerName: attestation.partnerName || "",
+          earliestPartnerAttestationId: attestation.refUID,
+          context: attestation.decodedData?.context || null,
+          attestations: [attestation],
+        });
+      }
+    });
+
+    // Convert builder map to array
+    const builders = Array.from(builderMap.values());
+
+    // Update partner verification counts
+    builders.forEach((builder) => {
+      const uniquePartners = new Set<string>();
+      builder.attestations.forEach((attestation) => {
+        if (attestation.refUID) {
+          uniquePartners.add(attestation.refUID);
+        }
+      });
+      uniquePartners.forEach((partnerUID) => {
+        const partner = partnerMap.get(partnerUID);
+        if (partner) {
+          partner.verifiedBuildersCount++;
+        }
+      });
+    });
+
+    // Calculate metrics
+    const metrics: ProcessedMetrics = {
+      totalBuilders: builders.length,
+      totalPartners: partners.length,
+      totalAttestations: builderAttestations.length,
+    };
+
+    return { builders, partners, metrics };
+  } catch (error) {
+    console.error("Error processing builder data:", error);
+    throw error;
+  }
+}
+
+// Cache for storing resolved data to avoid duplicate requests
+const dataCache = new Map<
+  string,
+  {
+    talentData: { score: number | null; profile: TalentProfile | null };
+    ens: string | undefined;
+    timestamp: number;
+  }
+>();
+
+const CACHE_TTL = 1000 * 60 * 60; // 1 hour cache TTL
+
+// Helper function to check if cached data is still valid
+function isCacheValid(timestamp: number): boolean {
+  return Date.now() - timestamp < CACHE_TTL;
+}
+
+// New function to enrich builders with Talent Protocol and ENS data
+export async function enrichBuildersWithNames(
+  builders: ProcessedBuilder[],
+  startIndex: number,
+  pageSize: number
+): Promise<ProcessedBuilder[]> {
+  const pageBuilders = builders.slice(startIndex, startIndex + pageSize);
+
+  // Filter out addresses that need data fetching
+  const addressesToFetch = pageBuilders
+    .map((b) => b.address)
+    .filter((address) => {
+      const cached = dataCache.get(address);
+      return !cached || !isCacheValid(cached.timestamp);
+    });
+
+  if (addressesToFetch.length > 0) {
+    // Fetch ENS names and Talent Protocol data in parallel
+    const [talentDataMap] = await Promise.all([
+      getTalentDataBatch(addressesToFetch),
+    ]);
+
+    // Update cache with new data
+    addressesToFetch.forEach((address) => {
+      const talentData = talentDataMap.get(address) || {
+        score: null,
+        profile: null,
+      };
+
+      dataCache.set(address, {
+        talentData,
+        ens: undefined, // We'll get this from the builder object
+        timestamp: Date.now(),
+      });
+    });
+  }
+
+  // Enrich builders with cached data
+  return pageBuilders.map((builder) => {
+    const cached = dataCache.get(builder.address);
+    if (!cached) {
+      return builder;
+    }
+
+    return {
+      ...builder,
+      builderScore: cached.talentData.score,
+      displayName: cached.talentData.profile?.display_name || null,
+      name: cached.talentData.profile?.name || null,
+      imageUrl: cached.talentData.profile?.image_url || null,
+    };
+  });
 }

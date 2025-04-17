@@ -1,9 +1,9 @@
 import { ethers } from "ethers";
+import { env } from "@/lib/env";
 
 // List of backup RPC endpoints
 const RPC_ENDPOINTS = [
-  `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
-  "https://ethereum.publicnode.com",
+  "https://ethereum.publicnode.com", // Fallback endpoint
 ];
 
 // Initialize provider with fallback functionality
@@ -74,30 +74,20 @@ class FallbackProvider {
 
 const fallbackProvider = new FallbackProvider();
 
-export async function resolveENS(address: string): Promise<string | null> {
-  try {
-    // First try to resolve the address to an ENS name
-    const name = await fallbackProvider.lookupAddress(address);
-
-    if (name) {
-      // Verify that the name resolves back to the same address
-      const resolvedAddress = await fallbackProvider.resolveName(name);
-      if (resolvedAddress?.toLowerCase() === address.toLowerCase()) {
-        return name;
-      }
-    }
-    return null;
-  } catch (error) {
-    console.error("Error resolving ENS:", error);
-    return null;
-  }
+export interface ENSResolutionResult {
+  ensMap: Record<string, string>;
+  metrics: {
+    totalAddresses: number;
+    resolvedCount: number;
+    timestamp: string;
+  };
 }
 
-export async function resolveAddresses(
+export async function resolveENS(
   addresses: string[]
-): Promise<Map<string, string>> {
+): Promise<ENSResolutionResult> {
   try {
-    const response = await fetch("/api/ens", {
+    const response = await fetch("/api/ens/resolve", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -106,13 +96,72 @@ export async function resolveAddresses(
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`Failed to resolve ENS names: ${response.statusText}`);
     }
 
     const data = await response.json();
-    return new Map(Object.entries(data.ensMap));
+    return data;
   } catch (error) {
-    console.error("Error resolving ENS names:", error);
-    return new Map();
+    console.error("ENS resolution error:", error);
+    return {
+      ensMap: {},
+      metrics: {
+        totalAddresses: addresses.length,
+        resolvedCount: 0,
+        timestamp: new Date().toISOString(),
+      },
+    };
   }
+}
+
+// Helper function to validate Ethereum addresses
+export function isValidAddress(address: string): boolean {
+  return ethers.isAddress(address);
+}
+
+// Helper function to format addresses
+export function formatAddress(address: string): string {
+  if (!isValidAddress(address)) return address;
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
+export async function resolveAddresses(
+  addresses: string[]
+): Promise<Map<string, string>> {
+  console.log(`Starting ENS resolution for ${addresses.length} addresses...`);
+  const ensMap = new Map<string, string>();
+  const uniqueAddresses = [...new Set(addresses)];
+  console.log(
+    `After deduplication: ${uniqueAddresses.length} unique addresses to resolve`
+  );
+
+  const fallbackProvider = new FallbackProvider();
+
+  // Process addresses in parallel with a small batch size
+  const BATCH_SIZE = 5;
+  const batches = [];
+
+  for (let i = 0; i < uniqueAddresses.length; i += BATCH_SIZE) {
+    batches.push(uniqueAddresses.slice(i, i + BATCH_SIZE));
+  }
+
+  for (const [batchIndex, batch] of batches.entries()) {
+    const batchPromises = batch.map(async (address) => {
+      try {
+        const ensName = await fallbackProvider.lookupAddress(address);
+        if (ensName) {
+          ensMap.set(address, ensName);
+        }
+      } catch (error) {
+        console.warn(`Failed to resolve ENS for address ${address}:`, error);
+      }
+    });
+
+    await Promise.all(batchPromises);
+  }
+
+  console.log(
+    `ENS resolution complete. Resolved ${ensMap.size} addresses out of ${uniqueAddresses.length}`
+  );
+  return ensMap;
 }

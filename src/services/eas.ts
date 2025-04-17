@@ -3,7 +3,6 @@ import {
   VerificationPartnerAttestation,
   VerifiedBuilderAttestation,
 } from "@/types";
-import { resolveAddresses } from "./ens";
 
 const PARTNER_SCHEMA_UID =
   "0x0c25f92df9ba914668f7780e428a1b5238ae7441c765fbe8b7b528f8209ef4e3";
@@ -59,67 +58,113 @@ async function fetchFromEAS(query: string) {
 export async function getAllAttestations() {
   return fetchWithRetry(async () => {
     try {
-      const response = await fetchFromEAS(`
-        query GetAllAttestations {
-          partners: attestations(
-            where: {
-              schemaId: { equals: "${PARTNER_SCHEMA_UID}" }
-              revoked: { equals: false }
-            }
-          ) {
-            id
-            attester
-            recipient
-            refUID
-            revocationTime
-            expirationTime
-            time
-            txid
-            data
-          }
-          builders: attestations(
-            where: {
-              schemaId: { equals: "${BUILDER_SCHEMA_UID}" }
-              revoked: { equals: false }
-            }
-          ) {
-            id
-            attester
-            recipient
-            refUID
-            revocationTime
-            expirationTime
-            time
-            txid
-            data
-          }
-        }
-      `);
+      const PAGE_SIZE = 1000;
+      let allPartners: any[] = [];
+      let allBuilders: any[] = [];
+      let skip = 0;
+      let hasMore = true;
+      let pageCount = 0;
 
-      // Add validation for the response structure
-      if (!response) {
-        console.error("EAS response is undefined");
-        throw new Error("Failed to get attestations: Response is undefined");
+      // Fetch all partner attestations
+      while (hasMore) {
+        pageCount++;
+        const response = await fetchFromEAS(`
+          query GetAllAttestations {
+            partners: attestations(
+              where: {
+                schemaId: { equals: "${PARTNER_SCHEMA_UID}" }
+                revoked: { equals: false }
+              }
+              take: ${PAGE_SIZE}
+              skip: ${skip}
+            ) {
+              id
+              attester
+              recipient
+              refUID
+              revocationTime
+              expirationTime
+              time
+              txid
+              data
+            }
+          }
+        `);
+
+        if (!response || !response.partners) {
+          throw new Error(
+            "Invalid response structure from EAS API for partners"
+          );
+        }
+
+        allPartners = [...allPartners, ...response.partners];
+        hasMore = response.partners.length === PAGE_SIZE;
+        skip += PAGE_SIZE;
+
+        if (hasMore) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
       }
 
-      if (!response.partners || !response.builders) {
-        console.error("Invalid EAS response structure:", response);
-        throw new Error(
-          "Failed to get attestations: Invalid response structure"
-        );
+      // Reset for builder attestations
+      skip = 0;
+      hasMore = true;
+      pageCount = 0;
+
+      // Fetch all builder attestations
+      while (hasMore) {
+        pageCount++;
+        const response = await fetchFromEAS(`
+          query GetAllAttestations {
+            builders: attestations(
+              where: {
+                schemaId: { equals: "${BUILDER_SCHEMA_UID}" }
+                revoked: { equals: false }
+              }
+              take: ${PAGE_SIZE}
+              skip: ${skip}
+            ) {
+              id
+              attester
+              recipient
+              refUID
+              revocationTime
+              expirationTime
+              time
+              txid
+              data
+            }
+          }
+        `);
+
+        if (!response || !response.builders) {
+          throw new Error(
+            "Invalid response structure from EAS API for builders"
+          );
+        }
+
+        allBuilders = [...allBuilders, ...response.builders];
+        hasMore = response.builders.length === PAGE_SIZE;
+        skip += PAGE_SIZE;
+
+        if (hasMore) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
       }
 
       return {
-        partners: response.partners || [],
-        builders: response.builders || [],
+        partners: allPartners,
+        builders: allBuilders,
       };
     } catch (error) {
       console.error("Error in getAllAttestations:", error);
-      // Return empty arrays instead of undefined to prevent null pointer errors
-      return {
-        partners: [],
-        builders: [],
-      };
+      if (error instanceof Error) {
+        console.error("Error details:", {
+          message: error.message,
+          stack: error.stack,
+        });
+      }
+      throw error;
     }
   });
 }
@@ -162,25 +207,8 @@ export async function getVerificationPartners(): Promise<
     }
   });
 
-  // Then resolve ENS names for all partners
-  const partnerAddresses = decodedAttestations
-    .filter((a: VerificationPartnerAttestation) => a.decodedData !== null)
-    .map((a: VerificationPartnerAttestation) => a.recipient);
-  const ensMap = await resolveAddresses(partnerAddresses);
-
-  // Finally, add ENS names to the decoded attestations
-  return decodedAttestations.map(
-    (attestation: VerificationPartnerAttestation) => {
-      if (!attestation.decodedData) return attestation;
-      return {
-        ...attestation,
-        decodedData: {
-          ...attestation.decodedData,
-          ens: ensMap.get(attestation.recipient),
-        },
-      };
-    }
-  );
+  // Return the decoded attestations without ENS resolution
+  return decodedAttestations;
 }
 
 export async function getVerifiedBuilders(): Promise<
@@ -217,7 +245,7 @@ export async function getVerifiedBuilders(): Promise<
   });
 
   // Process builder attestations
-  const processedAttestations = builderAttestations
+  return builderAttestations
     .map((attestation: any) => {
       try {
         if (!attestation.data || attestation.data === "0x") {
@@ -261,20 +289,6 @@ export async function getVerifiedBuilders(): Promise<
         return attestation !== null && attestation.decodedData.isBuilder;
       }
     );
-
-  // Resolve ENS names for all builders
-  const builderAddresses = processedAttestations.map(
-    (a: VerifiedBuilderAttestation) => a.recipient
-  );
-  const ensMap = await resolveAddresses(builderAddresses);
-
-  // Add ENS names to the processed attestations
-  return processedAttestations.map(
-    (attestation: VerifiedBuilderAttestation) => ({
-      ...attestation,
-      ens: ensMap.get(attestation.recipient),
-    })
-  );
 }
 
 export function getEAScanUrl(uid: string): string {
