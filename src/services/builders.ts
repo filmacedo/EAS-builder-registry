@@ -3,11 +3,11 @@ import {
   VerificationPartnerAttestation,
 } from "@/types";
 import { resolveAddresses } from "./ens";
-import { getTalentScore } from "./talent";
+import { getTalentScore, getTalentProfile } from "./talent";
 
 export interface ProcessedBuilder {
   id: string;
-  address: string;
+  address: `0x${string}`;
   totalVerifications: number;
   earliestAttestationId: string;
   earliestAttestationDate: number;
@@ -17,11 +17,14 @@ export interface ProcessedBuilder {
   attestations: VerifiedBuilderAttestation[];
   ens?: string;
   builderScore?: number | null;
+  name?: string | null;
+  displayName?: string | null;
+  imageUrl?: string | null;
 }
 
 export interface ProcessedPartner {
   id: string;
-  address: string;
+  address: `0x${string}`;
   name: string;
   url: string;
   attestationUID: string;
@@ -64,7 +67,7 @@ export async function processBuilderData(
     ) {
       builderMap.set(attestation.recipient, {
         id: attestation.id,
-        address: attestation.recipient,
+        address: attestation.recipient as `0x${string}`,
         totalVerifications: 1,
         earliestAttestationId: attestation.id,
         earliestAttestationDate: attestation.time,
@@ -84,24 +87,33 @@ export async function processBuilderData(
   const builderAddresses = Array.from(builderMap.keys());
   const ensMap = await resolveAddresses(builderAddresses);
 
-  // Fetch builder scores for all builders
-  const builderScores = await Promise.all(
+  // Fetch builder scores and profiles for all builders
+  const builderData = await Promise.all(
     builderAddresses.map(async (address) => {
-      const score = await getTalentScore(address);
-      return { address, score };
+      const [score, profile] = await Promise.all([
+        getTalentScore(address),
+        getTalentProfile(address),
+      ]);
+      return { address, score, profile };
     })
   );
 
-  // Create a map of builder scores
+  // Create maps for builder scores and profiles
   const builderScoreMap = new Map(
-    builderScores.map(({ address, score }) => [address, score])
+    builderData.map(({ address, score }) => [address, score])
+  );
+  const builderProfileMap = new Map(
+    builderData.map(({ address, profile }) => [address, profile])
   );
 
-  // Update builders with ENS names and scores
+  // Update builders with ENS names, scores, and profiles
   const builders = Array.from(builderMap.values()).map((builder) => ({
     ...builder,
     ens: ensMap.get(builder.address) || undefined,
     builderScore: builderScoreMap.get(builder.address) || null,
+    name: builderProfileMap.get(builder.address)?.name || null,
+    displayName: builderProfileMap.get(builder.address)?.display_name || null,
+    imageUrl: builderProfileMap.get(builder.address)?.image_url || null,
   }));
 
   // Process partner attestations
@@ -109,7 +121,7 @@ export async function processBuilderData(
     .filter((attestation) => attestation.decodedData !== null)
     .map((attestation) => ({
       id: attestation.id,
-      address: attestation.recipient,
+      address: attestation.recipient as `0x${string}`,
       name: attestation.decodedData!.name,
       url: attestation.decodedData!.url,
       attestationUID: attestation.id,
