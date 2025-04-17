@@ -10,13 +10,17 @@ import { getTalentProfile } from "@/services/talent";
 interface BuilderIdentityProps {
   address: `0x${string}`;
   ens?: string;
+  displayName?: string | null;
   size?: "sm" | "md" | "lg";
   className?: string;
 }
 
+const UNNAMED_BUILDER = "No name found";
+
 export function BuilderIdentity({
   address,
   ens,
+  displayName,
   size = "md",
   className,
 }: BuilderIdentityProps) {
@@ -56,7 +60,26 @@ export function BuilderIdentity({
         )}
       </div>
       <div className="flex flex-col">
-        {ens ? (
+        {displayName ? (
+          <>
+            <Link
+              href={`https://app.talentprotocol.com/wallet/${address}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium hover:underline"
+            >
+              {displayName}
+            </Link>
+            <Link
+              href={`https://etherscan.io/address/${address}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-muted-foreground hover:underline"
+            >
+              {truncateAddress(address)}
+            </Link>
+          </>
+        ) : ens ? (
           <>
             <Link
               href={`https://app.ens.domains/${ens}`}
@@ -76,14 +99,19 @@ export function BuilderIdentity({
             </Link>
           </>
         ) : (
-          <Link
-            href={`https://etherscan.io/address/${address}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-medium hover:underline"
-          >
-            {truncateAddress(address)}
-          </Link>
+          <>
+            <span className="font-medium text-muted-foreground">
+              {UNNAMED_BUILDER}
+            </span>
+            <Link
+              href={`https://etherscan.io/address/${address}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-muted-foreground hover:underline"
+            >
+              {truncateAddress(address)}
+            </Link>
+          </>
         )}
       </div>
     </div>

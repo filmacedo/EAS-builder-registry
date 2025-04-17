@@ -8,6 +8,12 @@ import { useMemo, memo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BuilderIdentity } from "@/components/BuilderIdentity";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface BuildersTableProps {
   builders: ProcessedBuilder[];
@@ -17,18 +23,16 @@ interface BuildersTableProps {
 const BuilderTableRow = memo(({ builder }: { builder: ProcessedBuilder }) => (
   <tr className="border-b transition-colors hover:bg-muted/50">
     <td className="p-4 w-[20%]">
-      <BuilderIdentity address={builder.address} ens={builder.ens} size="md" />
+      <BuilderIdentity
+        address={builder.address}
+        ens={builder.ens}
+        displayName={builder.displayName}
+        size="md"
+      />
     </td>
-    <td className="p-4 w-[15%]">
-      {builder.name ? (
-        <span className="font-medium">{builder.name}</span>
-      ) : (
-        <span className="text-muted-foreground">-</span>
-      )}
-    </td>
-    <td className="p-4 w-[15%]">
-      {builder.displayName ? (
-        <span className="font-medium">{builder.displayName}</span>
+    <td className="p-4 w-[10%]">
+      {builder.builderScore !== null ? (
+        <span className="font-medium">{builder.builderScore}</span>
       ) : (
         <span className="text-muted-foreground">-</span>
       )}
@@ -40,12 +44,16 @@ const BuilderTableRow = memo(({ builder }: { builder: ProcessedBuilder }) => (
           target="_blank"
           rel="noopener noreferrer"
         >
-          <Badge variant="partner" className="cursor-pointer">
-            {builder.earliestPartnerName}
+          <Badge variant="partner" className="cursor-pointer max-w-[150px]">
+            <span className="truncate block">
+              {builder.earliestPartnerName}
+            </span>
           </Badge>
         </Link>
       ) : (
-        builder.earliestPartnerName
+        <span className="truncate block max-w-[150px]">
+          {builder.earliestPartnerName}
+        </span>
       )}
     </td>
     <td className="p-4 w-[15%]">
@@ -53,15 +61,10 @@ const BuilderTableRow = memo(({ builder }: { builder: ProcessedBuilder }) => (
         {new Date(builder.earliestAttestationDate * 1000).toLocaleDateString()}
       </span>
     </td>
-    <td className="p-4 w-[10%]">
-      {builder.builderScore !== null ? (
-        <span className="font-medium">{builder.builderScore}</span>
-      ) : (
-        <span className="text-muted-foreground">-</span>
-      )}
-    </td>
     <td className="p-4 w-[25%]">
-      <span className="text-muted-foreground">{builder.context}</span>
+      <span className="text-muted-foreground line-clamp-2 block">
+        {builder.context}
+      </span>
     </td>
     <td className="p-4 text-center w-[5%]">
       <Link
@@ -86,6 +89,7 @@ const BuilderCard = memo(({ builder }: { builder: ProcessedBuilder }) => (
         <BuilderIdentity
           address={builder.address}
           ens={builder.ens}
+          displayName={builder.displayName}
           size="md"
         />
         <Link
@@ -99,13 +103,9 @@ const BuilderCard = memo(({ builder }: { builder: ProcessedBuilder }) => (
       </div>
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Name:</span>
-          <span className="text-sm">{builder.name ? builder.name : "-"}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Display Name:</span>
+          <span className="text-sm text-muted-foreground">Builder Score:</span>
           <span className="text-sm">
-            {builder.displayName ? builder.displayName : "-"}
+            {builder.builderScore !== null ? builder.builderScore : "-"}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -116,12 +116,16 @@ const BuilderCard = memo(({ builder }: { builder: ProcessedBuilder }) => (
               target="_blank"
               rel="noopener noreferrer"
             >
-              <Badge variant="partner" className="cursor-pointer">
-                {builder.earliestPartnerName}
+              <Badge variant="partner" className="cursor-pointer max-w-[200px]">
+                <span className="truncate block">
+                  {builder.earliestPartnerName}
+                </span>
               </Badge>
             </Link>
           ) : (
-            <span className="text-sm">{builder.earliestPartnerName}</span>
+            <span className="text-sm truncate block max-w-[200px]">
+              {builder.earliestPartnerName}
+            </span>
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -130,12 +134,6 @@ const BuilderCard = memo(({ builder }: { builder: ProcessedBuilder }) => (
             {new Date(
               builder.earliestAttestationDate * 1000
             ).toLocaleDateString()}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Builder Score:</span>
-          <span className="text-sm">
-            {builder.builderScore !== null ? builder.builderScore : "-"}
           </span>
         </div>
       </div>
@@ -174,20 +172,14 @@ export function BuildersTable({ builders }: BuildersTableProps) {
               <th className="h-12 px-4 text-left align-middle font-medium w-[20%]">
                 Builder
               </th>
-              <th className="h-12 px-4 text-left align-middle font-medium w-[15%]">
-                Name
-              </th>
-              <th className="h-12 px-4 text-left align-middle font-medium w-[15%]">
-                Display Name
+              <th className="h-12 px-4 text-left align-middle font-medium w-[10%]">
+                Score
               </th>
               <th className="h-12 px-4 text-left align-middle font-medium w-[15%]">
                 Verified By
               </th>
               <th className="h-12 px-4 text-left align-middle font-medium w-[15%]">
                 Verified On
-              </th>
-              <th className="h-12 px-4 text-left align-middle font-medium w-[10%]">
-                Score
               </th>
               <th className="h-12 px-4 text-left align-middle font-medium w-[25%]">
                 Context
