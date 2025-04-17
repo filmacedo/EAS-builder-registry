@@ -87,7 +87,7 @@ class FallbackProvider {
 }
 
 const provider = new FallbackProvider();
-
+export const maxDuration = 30;
 export async function POST(request: Request) {
   try {
     const { addresses } = await request.json();
