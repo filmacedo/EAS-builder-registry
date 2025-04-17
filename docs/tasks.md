@@ -86,7 +86,6 @@
 - [x] Set up Talent API connection
 - [x] Implement Builder Score fetching
 - [x] Add Builder Score to the Builders table
-- [ ] Add average builder score to Partners Leaderboard
 - [ ] Add Talent profile links
 - [ ] Add caching for Talent API responses
 
