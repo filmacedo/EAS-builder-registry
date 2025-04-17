@@ -79,9 +79,9 @@
 
 ### Talent API Integration
 
-- [ ] Set up Talent API connection
-- [ ] Implement Builder Score fetching
-- [ ] Add Builder Score to the Builders table
+- [x] Set up Talent API connection
+- [x] Implement Builder Score fetching
+- [x] Add Builder Score to the Builders table
 - [ ] Add average builder score to Partners Leaderboard
 - [ ] Add Talent profile links
 - [ ] Add caching for Talent API responses
@@ -154,3 +154,32 @@
 - All tasks should be completed before May 1st, 2025 (Builders Day)
 - Builders verified before April 17th will be featured on Times Square
 - Partners with 50+ verifications will have their logos displayed on Times Square ad
+
+# Project Tasks
+
+## Completed
+
+- [x] Set up Next.js project with TypeScript
+- [x] Configure Tailwind CSS
+- [x] Set up ESLint and Prettier
+- [x] Create basic project structure
+- [x] Implement ENS resolution endpoint
+- [x] Implement Talent Protocol builder score endpoint
+
+## In Progress
+
+- [ ] Implement EAS attestation verification
+- [ ] Create builder profile page
+- [ ] Add caching layer for API responses
+- [ ] Implement search functionality
+- [ ] Add pagination for large result sets
+
+## Future Tasks
+
+- [ ] Add authentication system
+- [ ] Implement rate limiting
+- [ ] Add monitoring and analytics
+- [ ] Create admin dashboard
+- [ ] Add unit tests
+- [ ] Add integration tests
+- [ ] Implement CI/CD pipeline

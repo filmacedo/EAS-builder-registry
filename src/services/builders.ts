@@ -3,6 +3,7 @@ import {
   VerificationPartnerAttestation,
 } from "@/types";
 import { resolveAddresses } from "./ens";
+import { getTalentScore } from "./talent";
 
 export interface ProcessedBuilder {
   id: string;
@@ -15,6 +16,7 @@ export interface ProcessedBuilder {
   context: string | null;
   attestations: VerifiedBuilderAttestation[];
   ens?: string;
+  builderScore?: number | null;
 }
 
 export interface ProcessedPartner {
@@ -70,6 +72,7 @@ export async function processBuilderData(
         earliestPartnerAttestationId: attestation.refUID,
         context: attestation.decodedData.context || null,
         attestations: [attestation],
+        builderScore: null,
       });
     } else {
       existingBuilder.totalVerifications++;
@@ -81,10 +84,24 @@ export async function processBuilderData(
   const builderAddresses = Array.from(builderMap.keys());
   const ensMap = await resolveAddresses(builderAddresses);
 
-  // Update builders with ENS names
+  // Fetch builder scores for all builders
+  const builderScores = await Promise.all(
+    builderAddresses.map(async (address) => {
+      const score = await getTalentScore(address);
+      return { address, score };
+    })
+  );
+
+  // Create a map of builder scores
+  const builderScoreMap = new Map(
+    builderScores.map(({ address, score }) => [address, score])
+  );
+
+  // Update builders with ENS names and scores
   const builders = Array.from(builderMap.values()).map((builder) => ({
     ...builder,
     ens: ensMap.get(builder.address) || undefined,
+    builderScore: builderScoreMap.get(builder.address) || null,
   }));
 
   // Process partner attestations

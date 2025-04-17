@@ -16,7 +16,7 @@ interface BuildersTableProps {
 // Memoized table row component for desktop view
 const BuilderTableRow = memo(({ builder }: { builder: ProcessedBuilder }) => (
   <tr className="border-b transition-colors hover:bg-muted/50">
-    <td className="p-4 w-[30%]">
+    <td className="p-4 w-[25%]">
       <BuilderIdentity address={builder.address} ens={builder.ens} size="md" />
     </td>
     <td className="p-4 w-[15%]">
@@ -39,7 +39,14 @@ const BuilderTableRow = memo(({ builder }: { builder: ProcessedBuilder }) => (
         {new Date(builder.earliestAttestationDate * 1000).toLocaleDateString()}
       </span>
     </td>
-    <td className="p-4 w-[35%]">
+    <td className="p-4 w-[10%]">
+      {builder.builderScore !== null ? (
+        <span className="font-medium">{builder.builderScore}</span>
+      ) : (
+        <span className="text-muted-foreground">-</span>
+      )}
+    </td>
+    <td className="p-4 w-[30%]">
       <span className="text-muted-foreground">{builder.context}</span>
     </td>
     <td className="p-4 text-center w-[5%]">
@@ -101,6 +108,12 @@ const BuilderCard = memo(({ builder }: { builder: ProcessedBuilder }) => (
             ).toLocaleDateString()}
           </span>
         </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Builder Score:</span>
+          <span className="text-sm">
+            {builder.builderScore !== null ? builder.builderScore : "-"}
+          </span>
+        </div>
       </div>
     </div>
   </div>
@@ -134,7 +147,7 @@ export function BuildersTable({ builders }: BuildersTableProps) {
         <table className="w-full caption-bottom text-sm">
           <thead className="bg-white border-b">
             <tr className="border-b transition-colors hover:bg-muted/50">
-              <th className="h-12 px-4 text-left align-middle font-medium w-[30%]">
+              <th className="h-12 px-4 text-left align-middle font-medium w-[25%]">
                 Builder
               </th>
               <th className="h-12 px-4 text-left align-middle font-medium w-[15%]">
@@ -143,7 +156,10 @@ export function BuildersTable({ builders }: BuildersTableProps) {
               <th className="h-12 px-4 text-left align-middle font-medium w-[15%]">
                 Verified On
               </th>
-              <th className="h-12 px-4 text-left align-middle font-medium w-[35%]">
+              <th className="h-12 px-4 text-left align-middle font-medium w-[10%]">
+                Score
+              </th>
+              <th className="h-12 px-4 text-left align-middle font-medium w-[30%]">
                 Context
               </th>
               <th className="h-12 px-4 text-center align-middle font-medium w-[5%]">
