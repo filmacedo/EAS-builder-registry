@@ -33,7 +33,7 @@ async function fetchWithRetry<T>(
 }
 
 async function fetchFromEAS(query: string) {
-  const response = await fetch("/api/cache", {
+  const response = await fetch("/api/eas", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -48,7 +48,7 @@ async function fetchFromEAS(query: string) {
   const result = await response.json();
 
   if (!result || !result.data) {
-    throw new Error("Invalid response structure from cache");
+    throw new Error("Invalid response structure from EAS");
   }
 
   return result.data;

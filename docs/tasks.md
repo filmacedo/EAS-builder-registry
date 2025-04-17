@@ -168,14 +168,18 @@
 - [x] Create basic project structure
 - [x] Implement ENS resolution endpoint
 - [x] Implement Talent Protocol builder score endpoint
+- [x] Implement server-side caching using unstable_cache
+- [x] Add caching to Talent API endpoints (24h revalidation)
+- [x] Add caching to EAS endpoints (5min revalidation)
+- [x] Add caching to ENS resolution endpoint (24h revalidation)
+- [x] Update all references from /api/cache to /api/eas
+- [x] Update error messages to be more accurate
 
 ## In Progress
 
-- [ ] Implement EAS attestation verification
-- [ ] Create builder profile page
-- [ ] Add caching layer for API responses
-- [ ] Implement search functionality
-- [ ] Add pagination for large result sets
+- [ ] Monitor caching performance in production
+- [ ] Add cache invalidation strategy for critical updates
+- [ ] Implement cache warming for frequently accessed data
 
 ## Future Tasks
 
@@ -186,3 +190,8 @@
 - [ ] Add unit tests
 - [ ] Add integration tests
 - [ ] Implement CI/CD pipeline
+- [ ] Add cache hit/miss metrics
+- [ ] Implement cache versioning
+- [ ] Add cache purge functionality
+- [ ] Optimize cache size and memory usage
+- [ ] Add cache compression for large responses
