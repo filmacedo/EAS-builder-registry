@@ -16,8 +16,22 @@ interface BuildersTableProps {
 // Memoized table row component for desktop view
 const BuilderTableRow = memo(({ builder }: { builder: ProcessedBuilder }) => (
   <tr className="border-b transition-colors hover:bg-muted/50">
-    <td className="p-4 w-[25%]">
+    <td className="p-4 w-[20%]">
       <BuilderIdentity address={builder.address} ens={builder.ens} size="md" />
+    </td>
+    <td className="p-4 w-[15%]">
+      {builder.name ? (
+        <span className="font-medium">{builder.name}</span>
+      ) : (
+        <span className="text-muted-foreground">-</span>
+      )}
+    </td>
+    <td className="p-4 w-[15%]">
+      {builder.displayName ? (
+        <span className="font-medium">{builder.displayName}</span>
+      ) : (
+        <span className="text-muted-foreground">-</span>
+      )}
     </td>
     <td className="p-4 w-[15%]">
       {builder.earliestPartnerAttestationId ? (
@@ -46,7 +60,7 @@ const BuilderTableRow = memo(({ builder }: { builder: ProcessedBuilder }) => (
         <span className="text-muted-foreground">-</span>
       )}
     </td>
-    <td className="p-4 w-[30%]">
+    <td className="p-4 w-[25%]">
       <span className="text-muted-foreground">{builder.context}</span>
     </td>
     <td className="p-4 text-center w-[5%]">
@@ -84,6 +98,16 @@ const BuilderCard = memo(({ builder }: { builder: ProcessedBuilder }) => (
         </Link>
       </div>
       <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Name:</span>
+          <span className="text-sm">{builder.name ? builder.name : "-"}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Display Name:</span>
+          <span className="text-sm">
+            {builder.displayName ? builder.displayName : "-"}
+          </span>
+        </div>
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Verified By:</span>
           {builder.earliestPartnerAttestationId ? (
@@ -147,8 +171,14 @@ export function BuildersTable({ builders }: BuildersTableProps) {
         <table className="w-full caption-bottom text-sm">
           <thead className="bg-white border-b">
             <tr className="border-b transition-colors hover:bg-muted/50">
-              <th className="h-12 px-4 text-left align-middle font-medium w-[25%]">
+              <th className="h-12 px-4 text-left align-middle font-medium w-[20%]">
                 Builder
+              </th>
+              <th className="h-12 px-4 text-left align-middle font-medium w-[15%]">
+                Name
+              </th>
+              <th className="h-12 px-4 text-left align-middle font-medium w-[15%]">
+                Display Name
               </th>
               <th className="h-12 px-4 text-left align-middle font-medium w-[15%]">
                 Verified By
@@ -159,7 +189,7 @@ export function BuildersTable({ builders }: BuildersTableProps) {
               <th className="h-12 px-4 text-left align-middle font-medium w-[10%]">
                 Score
               </th>
-              <th className="h-12 px-4 text-left align-middle font-medium w-[30%]">
+              <th className="h-12 px-4 text-left align-middle font-medium w-[25%]">
                 Context
               </th>
               <th className="h-12 px-4 text-center align-middle font-medium w-[5%]">

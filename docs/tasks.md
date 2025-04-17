@@ -24,6 +24,10 @@
   - Improved progress tracking with step-by-step updates
   - Added note about initial load time
   - Implemented simulated progress for better UX
+- [x] Add Talent Protocol profile information to builders table
+  - Added name and display name columns from Talent Protocol API
+  - Updated both desktop and mobile views
+  - Added proper fallback display for missing data
 
 ### EAS Integration
 
