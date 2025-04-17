@@ -72,6 +72,8 @@
 - [x] Implement robust TypeScript interfaces
 - [x] Add type guards for error handling
 - [x] Standardize error message handling
+  - [x] Update error messages to be more descriptive and consistent with EAS terminology
+  - [x] Fix references from cache to EAS in error messages
 - [x] Implement strict TypeScript checks
 
 ### OnchainKit Integration

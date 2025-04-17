@@ -48,7 +48,9 @@ async function fetchFromEAS(query: string) {
   const result = await response.json();
 
   if (!result || !result.data) {
-    throw new Error("Invalid response structure from EAS");
+    throw new Error(
+      "Invalid response structure from EAS API: missing result or data field"
+    );
   }
 
   return result.data;
@@ -56,44 +58,69 @@ async function fetchFromEAS(query: string) {
 
 export async function getAllAttestations() {
   return fetchWithRetry(async () => {
-    const { data } = await fetchFromEAS(`
-      query GetAllAttestations {
-        partners: attestations(
-          where: {
-            schemaId: { equals: "${PARTNER_SCHEMA_UID}" }
-            revoked: { equals: false }
+    try {
+      const response = await fetchFromEAS(`
+        query GetAllAttestations {
+          partners: attestations(
+            where: {
+              schemaId: { equals: "${PARTNER_SCHEMA_UID}" }
+              revoked: { equals: false }
+            }
+          ) {
+            id
+            attester
+            recipient
+            refUID
+            revocationTime
+            expirationTime
+            time
+            txid
+            data
           }
-        ) {
-          id
-          attester
-          recipient
-          refUID
-          revocationTime
-          expirationTime
-          time
-          txid
-          data
-        }
-        builders: attestations(
-          where: {
-            schemaId: { equals: "${BUILDER_SCHEMA_UID}" }
-            revoked: { equals: false }
+          builders: attestations(
+            where: {
+              schemaId: { equals: "${BUILDER_SCHEMA_UID}" }
+              revoked: { equals: false }
+            }
+          ) {
+            id
+            attester
+            recipient
+            refUID
+            revocationTime
+            expirationTime
+            time
+            txid
+            data
           }
-        ) {
-          id
-          attester
-          recipient
-          refUID
-          revocationTime
-          expirationTime
-          time
-          txid
-          data
         }
-      }
-    `);
+      `);
 
-    return data;
+      // Add validation for the response structure
+      if (!response) {
+        console.error("EAS response is undefined");
+        throw new Error("Failed to get attestations: Response is undefined");
+      }
+
+      if (!response.partners || !response.builders) {
+        console.error("Invalid EAS response structure:", response);
+        throw new Error(
+          "Failed to get attestations: Invalid response structure"
+        );
+      }
+
+      return {
+        partners: response.partners || [],
+        builders: response.builders || [],
+      };
+    } catch (error) {
+      console.error("Error in getAllAttestations:", error);
+      // Return empty arrays instead of undefined to prevent null pointer errors
+      return {
+        partners: [],
+        builders: [],
+      };
+    }
   });
 }
 
