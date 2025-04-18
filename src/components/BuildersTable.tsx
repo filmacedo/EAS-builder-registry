@@ -18,6 +18,7 @@ import { enrichBuildersWithNames } from "@/services/builders";
 
 interface BuildersTableProps {
   builders: ProcessedBuilder[];
+  filteredCount?: number; // Optional prop for filtered count
 }
 
 // Memoized table row component for desktop view
@@ -144,7 +145,7 @@ const BuilderCard = memo(({ builder }: { builder: ProcessedBuilder }) => (
 
 BuilderCard.displayName = "BuilderCard";
 
-export function BuildersTable({ builders }: BuildersTableProps) {
+export function BuildersTable({ builders, filteredCount }: BuildersTableProps) {
   const [visibleCount, setVisibleCount] = useState(10);
   const [enrichedBuilders, setEnrichedBuilders] = useState<ProcessedBuilder[]>(
     []
@@ -233,9 +234,13 @@ export function BuildersTable({ builders }: BuildersTableProps) {
         ))}
       </div>
 
-      {/* Load More Button */}
-      {visibleCount < builders.length && (
-        <div className="flex items-center justify-center px-4 py-3 border-t">
+      {/* Footer with counter and load more button */}
+      <div className="flex items-center justify-between px-4 py-3 border-t">
+        <div className="text-sm text-muted-foreground">
+          Showing {enrichedBuilders.length} of{" "}
+          {filteredCount || builders.length} builders
+        </div>
+        {visibleCount < builders.length && (
           <Button
             variant="outline"
             size="sm"
@@ -244,8 +249,8 @@ export function BuildersTable({ builders }: BuildersTableProps) {
           >
             {isLoading ? "Loading..." : "Load More"}
           </Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

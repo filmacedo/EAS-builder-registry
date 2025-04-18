@@ -9,7 +9,7 @@ import Link from "next/link";
 
 interface Partner {
   id: string;
-  address: string;
+  address: `0x${string}`;
   name: string;
   url: string;
   time: number;
@@ -51,7 +51,7 @@ export default function PartnersPage() {
 
             return {
               id: attestation.id,
-              address: attestation.recipient,
+              address: attestation.recipient as `0x${string}`,
               name: attestation.decodedData.name,
               url: attestation.decodedData.url || "",
               time: attestation.time,
@@ -144,7 +144,7 @@ export default function PartnersPage() {
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-2xl font-semibold">Impact Leaderboard</h2>
+        <h2 className="text-2xl font-semibold">Partner Leaderboard</h2>
         <PartnersTable partners={partners} />
       </div>
 

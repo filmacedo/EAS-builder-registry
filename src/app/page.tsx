@@ -50,10 +50,18 @@ export default function Home() {
           partnerAttestations
         );
 
+        // Sort partners by verifiedBuildersCount (descending) and then by name (alphabetically)
+        const sortedPartners = [...partners].sort((a, b) => {
+          if (b.verifiedBuildersCount !== a.verifiedBuildersCount) {
+            return b.verifiedBuildersCount - a.verifiedBuildersCount;
+          }
+          return a.name.localeCompare(b.name);
+        }) as ProcessedPartner[];
+
         setBuilders(builders);
         setFilteredBuilders(builders);
-        setPartners(partners);
-        setFilteredPartners(partners);
+        setPartners(sortedPartners);
+        setFilteredPartners(sortedPartners);
         setMetrics(metrics);
       } catch (error) {
         console.error("Error fetching data:", error);
