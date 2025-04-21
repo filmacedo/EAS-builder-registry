@@ -157,7 +157,7 @@ export default function Home() {
         <p className="text-muted-foreground max-w-2xl">
           The first community-sourced directory that recognizes real onchain
           builders through verified attestations. Join as a partner before April
-          17th to be featured on Times Square.
+          21st to be featured on Times Square.
         </p>
         <div className="flex gap-4">
           <Button asChild>
