@@ -53,6 +53,7 @@ interface Analytics {
   unresolvedProfiles: number;
   nonExistentProfiles: number;
   addressesWithScore: number;
+  repeatedDisplayNames: number;
 }
 
 interface TalentProfile {
@@ -312,6 +313,7 @@ async function main() {
     unresolvedProfiles: 0,
     nonExistentProfiles: 0,
     addressesWithScore: 0,
+    repeatedDisplayNames: 0,
   };
 
   // Process partners
@@ -381,6 +383,9 @@ async function main() {
   console.log("\nFetching Talent Protocol profiles...");
   const talentData = await getTalentDataBatch(Array.from(verifiedBuilders));
 
+  // Track display names and their associated addresses
+  const displayNameMap = new Map<string, string[]>();
+
   // Process profile data and prepare CSV content
   const csvRows: string[] = [];
   talentData.forEach((data, address) => {
@@ -390,6 +395,13 @@ async function main() {
       if (profile.builder_score !== null) {
         analytics.addressesWithScore++;
       }
+
+      // Track display names
+      const displayName = profile.display_name;
+      const addresses = displayNameMap.get(displayName) || [];
+      addresses.push(address);
+      displayNameMap.set(displayName, addresses);
+
       csvRows.push(
         `${address},${profile.display_name},${profile.builder_score || ""}`
       );
@@ -399,6 +411,13 @@ async function main() {
     } else {
       analytics.unresolvedProfiles++;
       csvRows.push(`${address},,`);
+    }
+  });
+
+  // Count repeated display names
+  displayNameMap.forEach((addresses, displayName) => {
+    if (addresses.length > 1) {
+      analytics.repeatedDisplayNames++;
     }
   });
 
@@ -462,6 +481,9 @@ async function main() {
   );
   console.log(`Addresses with no profile: ${analytics.nonExistentProfiles}`);
   console.log(`Addresses with Builder Score: ${analytics.addressesWithScore}`);
+  console.log(
+    `Display names used by multiple addresses: ${analytics.repeatedDisplayNames}`
+  );
 
   console.log(`\nOutput written to: ${outputPath}`);
 }

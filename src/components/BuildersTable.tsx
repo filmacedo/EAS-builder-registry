@@ -1,6 +1,5 @@
 "use client";
 
-import { truncateAddress } from "@/lib/utils";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { ProcessedBuilder } from "@/services/builders";
@@ -8,13 +7,10 @@ import { useMemo, memo, useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BuilderIdentity } from "@/components/BuilderIdentity";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { enrichBuildersWithNames } from "@/services/builders";
+import { NetworkBadge } from "@/components/NetworkBadge";
+import { getEAScanUrl } from "@/services/eas";
+import { Network } from "@/types";
 
 interface BuildersTableProps {
   builders: ProcessedBuilder[];
@@ -42,7 +38,10 @@ const BuilderTableRow = memo(({ builder }: { builder: ProcessedBuilder }) => (
     <td className="p-4 w-[15%]">
       {builder.earliestPartnerAttestationId ? (
         <Link
-          href={`https://base.easscan.org/attestation/view/${builder.earliestPartnerAttestationId}`}
+          href={getEAScanUrl(
+            builder.earliestPartnerAttestationId,
+            builder.earliestAttestationNetwork as Network
+          )}
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -69,14 +68,20 @@ const BuilderTableRow = memo(({ builder }: { builder: ProcessedBuilder }) => (
       </span>
     </td>
     <td className="p-4 text-center w-[5%]">
-      <Link
-        href={`https://base.easscan.org/attestation/view/${builder.earliestAttestationId}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex text-muted-foreground hover:text-primary"
-      >
-        <ExternalLink className="h-4 w-4" />
-      </Link>
+      <div className="flex items-center justify-center gap-2">
+        <NetworkBadge network={builder.earliestAttestationNetwork as Network} />
+        <Link
+          href={getEAScanUrl(
+            builder.earliestAttestationId,
+            builder.earliestAttestationNetwork as Network
+          )}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex text-muted-foreground hover:text-primary"
+        >
+          <ExternalLink className="h-4 w-4" />
+        </Link>
+      </div>
     </td>
   </tr>
 ));

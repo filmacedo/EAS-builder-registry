@@ -1,3 +1,5 @@
+export type Network = "base" | "celo";
+
 export interface EASAttestation {
   id: string;
   attester: string;
@@ -8,12 +10,10 @@ export interface EASAttestation {
   time: number;
   txid: string;
   data: string;
+  network: Network;
 }
 
-export interface VerificationPartnerAttestation {
-  id: string;
-  recipient: string;
-  time: number;
+export interface VerificationPartnerAttestation extends EASAttestation {
   decodedData: {
     name: string;
     url: string;
@@ -55,4 +55,31 @@ export interface Metrics {
   totalBuilders: number;
   totalPartners: number;
   totalAttestations: number;
+}
+
+export interface ProcessedBuilder {
+  id: string;
+  address: `0x${string}`;
+  ens?: string;
+  displayName?: string;
+  builderScore?: number | null;
+  totalVerifications: number;
+  earliestAttestationDate: number;
+  earliestAttestationId: string;
+  earliestAttestationNetwork: Network;
+  earliestPartnerName: string;
+  earliestPartnerAttestationId?: string | null;
+  earliestPartnerNetwork?: Network;
+  context: string | null | undefined;
+  attestations: VerifiedBuilderAttestation[];
+}
+
+export interface ProcessedPartner {
+  id: string;
+  address: `0x${string}`;
+  name: string;
+  url: string;
+  attestationUID: string;
+  verifiedBuildersCount: number;
+  network: Network;
 }

@@ -6,6 +6,31 @@ import { getVerificationPartners, getVerifiedBuilders } from "@/services/eas";
 import { resolveAddresses } from "@/services/ens";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Network, VerificationPartnerAttestation } from "@/types";
+
+// Sorting function for partners
+const sortPartners = (a: Partner, b: Partner): number =>
+  b.verificationCount - a.verificationCount || a.name.localeCompare(b.name);
+
+// Process raw attestation data into Partner objects
+const processAttestations = (
+  attestation: VerificationPartnerAttestation,
+  verificationCounts: Map<string, number>
+): Partner | null => {
+  if (!attestation.decodedData?.name) return null;
+
+  return {
+    id: attestation.id,
+    address: attestation.recipient as `0x${string}`,
+    name: attestation.decodedData.name,
+    url: attestation.decodedData.url || "",
+    time: attestation.time,
+    verificationCount: verificationCounts.get(attestation.id) || 0,
+    attestationUID: attestation.id,
+    verifiedBuildersCount: verificationCounts.get(attestation.id) || 0,
+    network: attestation.network,
+  };
+};
 
 interface Partner {
   id: string;
@@ -17,6 +42,7 @@ interface Partner {
   ens?: string;
   attestationUID: string;
   verifiedBuildersCount: number;
+  network: Network;
 }
 
 export default function PartnersPage() {
@@ -45,29 +71,12 @@ export default function PartnersPage() {
 
         // Process partner data
         const processedPartners = partnerAttestations
-          .map((attestation) => {
-            // Skip if no data or invalid data
-            if (!attestation.decodedData?.name) return null;
-
-            return {
-              id: attestation.id,
-              address: attestation.recipient as `0x${string}`,
-              name: attestation.decodedData.name,
-              url: attestation.decodedData.url || "",
-              time: attestation.time,
-              verificationCount: verificationCounts.get(attestation.id) || 0,
-              attestationUID: attestation.id,
-              verifiedBuildersCount:
-                verificationCounts.get(attestation.id) || 0,
-            };
-          })
+          .map((attestation) =>
+            processAttestations(attestation, verificationCounts)
+          )
           .filter((partner): partner is Partner => partner !== null)
           // Sort by verification count (highest first), then by name alphabetically
-          .sort(
-            (a, b) =>
-              b.verificationCount - a.verificationCount ||
-              a.name.localeCompare(b.name)
-          );
+          .sort(sortPartners);
 
         // Resolve ENS names for partners
         const partnerAddresses = processedPartners.map((p) => p.address);

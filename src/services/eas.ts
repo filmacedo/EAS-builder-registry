@@ -2,11 +2,19 @@ import { SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
 import {
   VerificationPartnerAttestation,
   VerifiedBuilderAttestation,
+  Network,
 } from "@/types";
 
-const PARTNER_SCHEMA_UID =
+// Base Network Schema UIDs
+const BASE_PARTNER_SCHEMA_UID =
   "0x0c25f92df9ba914668f7780e428a1b5238ae7441c765fbe8b7b528f8209ef4e3";
-const BUILDER_SCHEMA_UID =
+const BASE_BUILDER_SCHEMA_UID =
+  "0x597905068aedcde4321ceaf2c42e24d3bbe0af694159bececd686bf057ec7ea5";
+
+// Celo Network Schema UIDs
+const CELO_PARTNER_SCHEMA_UID =
+  "0x0c25f92df9ba914668f7780e428a1b5238ae7441c765fbe8b7b528f8209ef4e3";
+const CELO_BUILDER_SCHEMA_UID =
   "0x597905068aedcde4321ceaf2c42e24d3bbe0af694159bececd686bf057ec7ea5";
 
 // Initialize schema encoders
@@ -31,24 +39,34 @@ async function fetchWithRetry<T>(
   }
 }
 
-async function fetchFromEAS(query: string) {
+async function fetchFromEAS(query: string, network: Network) {
   const response = await fetch("/api/eas", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ query }),
+    body: JSON.stringify({ query, network }),
+    cache: "no-store",
   });
 
   if (!response.ok) {
+    console.error(`HTTP error from ${network} network:`, {
+      status: response.status,
+      statusText: response.statusText,
+    });
     throw new Error(`HTTP error! status: ${response.status}`);
   }
 
   const result = await response.json();
+  console.log(`Response from ${network} network:`, result);
 
   if (!result || !result.data) {
+    console.error(
+      `Invalid response structure from ${network} network:`,
+      result
+    );
     throw new Error(
-      "Invalid response structure from EAS API: missing result or data field"
+      `Invalid response structure from EAS API on ${network}: missing result or data field`
     );
   }
 
@@ -65,44 +83,66 @@ export async function getAllAttestations() {
       let hasMore = true;
       let pageCount = 0;
 
-      // Fetch all partner attestations
-      while (hasMore) {
-        pageCount++;
-        const response = await fetchFromEAS(`
-          query GetAllAttestations {
-            partners: attestations(
-              where: {
-                schemaId: { equals: "${PARTNER_SCHEMA_UID}" }
-                revoked: { equals: false }
+      // Fetch all partner attestations from both networks
+      for (const network of ["base", "celo"] as Network[]) {
+        skip = 0;
+        hasMore = true;
+        pageCount = 0;
+
+        const schemaUID =
+          network === "base"
+            ? BASE_PARTNER_SCHEMA_UID
+            : CELO_PARTNER_SCHEMA_UID;
+
+        while (hasMore) {
+          pageCount++;
+          const response = await fetchFromEAS(
+            `
+            query GetAllAttestations {
+              partners: attestations(
+                where: {
+                  schemaId: { equals: "${schemaUID}" }
+                  revoked: { equals: false }
+                }
+                take: ${PAGE_SIZE}
+                skip: ${skip}
+              ) {
+                id
+                attester
+                recipient
+                refUID
+                revocationTime
+                expirationTime
+                time
+                txid
+                data
               }
-              take: ${PAGE_SIZE}
-              skip: ${skip}
-            ) {
-              id
-              attester
-              recipient
-              refUID
-              revocationTime
-              expirationTime
-              time
-              txid
-              data
             }
-          }
-        `);
-
-        if (!response || !response.partners) {
-          throw new Error(
-            "Invalid response structure from EAS API for partners"
+          `,
+            network
           );
-        }
 
-        allPartners = [...allPartners, ...response.partners];
-        hasMore = response.partners.length === PAGE_SIZE;
-        skip += PAGE_SIZE;
+          if (!response || !response.partners) {
+            throw new Error(
+              `Invalid response structure from EAS API for partners on ${network}`
+            );
+          }
 
-        if (hasMore) {
-          await new Promise((resolve) => setTimeout(resolve, 500));
+          // Add network information to each attestation
+          const networkAttestations = response.partners.map(
+            (attestation: any) => ({
+              ...attestation,
+              network,
+            })
+          );
+
+          allPartners = [...allPartners, ...networkAttestations];
+          hasMore = response.partners.length === PAGE_SIZE;
+          skip += PAGE_SIZE;
+
+          if (hasMore) {
+            await new Promise((resolve) => setTimeout(resolve, 500));
+          }
         }
       }
 
@@ -111,44 +151,66 @@ export async function getAllAttestations() {
       hasMore = true;
       pageCount = 0;
 
-      // Fetch all builder attestations
-      while (hasMore) {
-        pageCount++;
-        const response = await fetchFromEAS(`
-          query GetAllAttestations {
-            builders: attestations(
-              where: {
-                schemaId: { equals: "${BUILDER_SCHEMA_UID}" }
-                revoked: { equals: false }
+      // Fetch all builder attestations from both networks
+      for (const network of ["base", "celo"] as Network[]) {
+        skip = 0;
+        hasMore = true;
+        pageCount = 0;
+
+        const schemaUID =
+          network === "base"
+            ? BASE_BUILDER_SCHEMA_UID
+            : CELO_BUILDER_SCHEMA_UID;
+
+        while (hasMore) {
+          pageCount++;
+          const response = await fetchFromEAS(
+            `
+            query GetAllAttestations {
+              builders: attestations(
+                where: {
+                  schemaId: { equals: "${schemaUID}" }
+                  revoked: { equals: false }
+                }
+                take: ${PAGE_SIZE}
+                skip: ${skip}
+              ) {
+                id
+                attester
+                recipient
+                refUID
+                revocationTime
+                expirationTime
+                time
+                txid
+                data
               }
-              take: ${PAGE_SIZE}
-              skip: ${skip}
-            ) {
-              id
-              attester
-              recipient
-              refUID
-              revocationTime
-              expirationTime
-              time
-              txid
-              data
             }
-          }
-        `);
-
-        if (!response || !response.builders) {
-          throw new Error(
-            "Invalid response structure from EAS API for builders"
+          `,
+            network
           );
-        }
 
-        allBuilders = [...allBuilders, ...response.builders];
-        hasMore = response.builders.length === PAGE_SIZE;
-        skip += PAGE_SIZE;
+          if (!response || !response.builders) {
+            throw new Error(
+              `Invalid response structure from EAS API for builders on ${network}`
+            );
+          }
 
-        if (hasMore) {
-          await new Promise((resolve) => setTimeout(resolve, 500));
+          // Add network information to each attestation
+          const networkAttestations = response.builders.map(
+            (attestation: any) => ({
+              ...attestation,
+              network,
+            })
+          );
+
+          allBuilders = [...allBuilders, ...networkAttestations];
+          hasMore = response.builders.length === PAGE_SIZE;
+          skip += PAGE_SIZE;
+
+          if (hasMore) {
+            await new Promise((resolve) => setTimeout(resolve, 500));
+          }
         }
       }
 
@@ -291,6 +353,10 @@ export async function getVerifiedBuilders(): Promise<
     );
 }
 
-export function getEAScanUrl(uid: string): string {
-  return `https://base.easscan.org/attestation/view/${uid}`;
+export function getEAScanUrl(uid: string, network: Network): string {
+  const baseUrl =
+    network === "base"
+      ? "https://base.easscan.org"
+      : "https://celo.easscan.org";
+  return `${baseUrl}/attestation/view/${uid}`;
 }

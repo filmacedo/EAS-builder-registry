@@ -6,6 +6,9 @@ import { ExternalLink } from "lucide-react";
 import { ProcessedPartner } from "@/services/builders";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { NetworkBadge } from "@/components/NetworkBadge";
+import { getEAScanUrl } from "@/services/eas";
+import { Network } from "@/types";
 
 interface PartnersTableProps {
   partners: ProcessedPartner[];
@@ -59,14 +62,17 @@ const PartnerCard = ({ partner }: { partner: ProcessedPartner }) => (
             </Link>
           )}
         </div>
-        <Link
-          href={`https://base.easscan.org/attestation/view/${partner.id}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-muted-foreground hover:text-primary"
-        >
-          <ExternalLink className="h-4 w-4" />
-        </Link>
+        <div className="flex items-center gap-2">
+          <NetworkBadge network={partner.network as Network} />
+          <Link
+            href={getEAScanUrl(partner.id, partner.network as Network)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground hover:text-primary"
+          >
+            <ExternalLink className="h-4 w-4" />
+          </Link>
+        </div>
       </div>
       <div className="flex items-center gap-2">
         <span className="text-sm text-muted-foreground">
@@ -185,14 +191,20 @@ export function PartnersTable({ partners }: PartnersTableProps) {
                   </span>
                 </td>
                 <td className="p-4 text-center w-[10%]">
-                  <Link
-                    href={`https://base.easscan.org/attestation/view/${partner.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex text-muted-foreground hover:text-primary"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                  </Link>
+                  <div className="flex items-center justify-center gap-2">
+                    <NetworkBadge network={partner.network as Network} />
+                    <Link
+                      href={getEAScanUrl(
+                        partner.id,
+                        partner.network as Network
+                      )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex text-muted-foreground hover:text-primary"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </Link>
+                  </div>
                 </td>
               </tr>
             ))}

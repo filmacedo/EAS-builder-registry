@@ -11,6 +11,7 @@ export interface ProcessedBuilder {
   totalVerifications: number;
   earliestAttestationId: string;
   earliestAttestationDate: number;
+  earliestAttestationNetwork: string;
   earliestPartnerName: string;
   earliestPartnerAttestationId: string | null;
   context: string | null;
@@ -30,6 +31,7 @@ export interface ProcessedPartner {
   attestationUID: string;
   verifiedBuildersCount: number;
   ens?: string;
+  network: string;
 }
 
 export interface ProcessedMetrics {
@@ -80,6 +82,7 @@ export async function processBuilderData(
         attestationUID: attestation.id,
         verifiedBuildersCount: 0,
         ens: attestation.decodedData?.ens,
+        network: attestation.network,
       })
     );
 
@@ -103,6 +106,7 @@ export async function processBuilderData(
         if (attestation.time < existingBuilder.earliestAttestationDate) {
           existingBuilder.earliestAttestationDate = attestation.time;
           existingBuilder.earliestAttestationId = attestation.id;
+          existingBuilder.earliestAttestationNetwork = attestation.network;
           existingBuilder.earliestPartnerName = attestation.partnerName || "";
           existingBuilder.earliestPartnerAttestationId = attestation.refUID;
           existingBuilder.context = attestation.decodedData?.context || null;
@@ -115,6 +119,7 @@ export async function processBuilderData(
           totalVerifications: 1,
           earliestAttestationId: attestation.id,
           earliestAttestationDate: attestation.time,
+          earliestAttestationNetwork: attestation.network,
           earliestPartnerName: attestation.partnerName || "",
           earliestPartnerAttestationId: attestation.refUID,
           context: attestation.decodedData?.context || null,
