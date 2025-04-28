@@ -15,6 +15,7 @@ import { Network } from "@/types";
 interface BuildersTableProps {
   builders: ProcessedBuilder[];
   filteredCount?: number; // Optional prop for filtered count
+  isSearching?: boolean; // Add isSearching prop
 }
 
 // Memoized table row component for desktop view
@@ -150,7 +151,11 @@ const BuilderCard = memo(({ builder }: { builder: ProcessedBuilder }) => (
 
 BuilderCard.displayName = "BuilderCard";
 
-export function BuildersTable({ builders, filteredCount }: BuildersTableProps) {
+export function BuildersTable({
+  builders,
+  filteredCount,
+  isSearching = false,
+}: BuildersTableProps) {
   const [visibleCount, setVisibleCount] = useState(10);
   const [enrichedBuilders, setEnrichedBuilders] = useState<ProcessedBuilder[]>(
     []
@@ -201,61 +206,83 @@ export function BuildersTable({ builders, filteredCount }: BuildersTableProps) {
     <div className="rounded-md border">
       {/* Desktop view */}
       <div className="relative hidden md:block">
-        <table className="w-full caption-bottom text-sm">
-          <thead className="bg-white border-b">
-            <tr className="border-b transition-colors hover:bg-muted/50">
-              <th className="h-12 px-4 text-left align-middle font-medium w-[20%]">
-                Builder
-              </th>
-              <th className="h-12 px-4 text-left align-middle font-medium w-[10%]">
-                Score
-              </th>
-              <th className="h-12 px-4 text-left align-middle font-medium w-[15%]">
-                Verified By
-              </th>
-              <th className="h-12 px-4 text-left align-middle font-medium w-[15%]">
-                Verified On
-              </th>
-              <th className="h-12 px-4 text-left align-middle font-medium w-[25%]">
-                Context
-              </th>
-              <th className="h-12 px-4 text-center align-middle font-medium w-[5%]">
-                EAS
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {enrichedBuilders.map((builder) => (
-              <BuilderTableRow key={builder.id} builder={builder} />
-            ))}
-          </tbody>
-        </table>
+        {isSearching ? (
+          <div className="p-8 text-center text-muted-foreground">
+            Searching builders...
+          </div>
+        ) : enrichedBuilders.length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground">
+            No builders found matching your search criteria
+          </div>
+        ) : (
+          <table className="w-full caption-bottom text-sm">
+            <thead className="bg-white border-b">
+              <tr className="border-b transition-colors hover:bg-muted/50">
+                <th className="h-12 px-4 text-left align-middle font-medium w-[20%]">
+                  Builder
+                </th>
+                <th className="h-12 px-4 text-left align-middle font-medium w-[10%]">
+                  Score
+                </th>
+                <th className="h-12 px-4 text-left align-middle font-medium w-[15%]">
+                  Verified By
+                </th>
+                <th className="h-12 px-4 text-left align-middle font-medium w-[15%]">
+                  Verified On
+                </th>
+                <th className="h-12 px-4 text-left align-middle font-medium w-[25%]">
+                  Context
+                </th>
+                <th className="h-12 px-4 text-center align-middle font-medium w-[5%]">
+                  EAS
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {enrichedBuilders.map((builder) => (
+                <BuilderTableRow key={builder.id} builder={builder} />
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* Mobile view */}
       <div className="md:hidden">
-        {enrichedBuilders.map((builder) => (
-          <BuilderCard key={builder.id} builder={builder} />
-        ))}
+        {isSearching ? (
+          <div className="p-4 text-center text-muted-foreground">
+            Searching builders...
+          </div>
+        ) : enrichedBuilders.length === 0 ? (
+          <div className="p-4 text-center text-muted-foreground">
+            No builders found matching your search criteria
+          </div>
+        ) : (
+          enrichedBuilders.map((builder) => (
+            <BuilderCard key={builder.id} builder={builder} />
+          ))
+        )}
       </div>
 
       {/* Footer with counter and load more button */}
-      <div className="flex items-center justify-between px-4 py-3 border-t">
-        <div className="text-sm text-muted-foreground">
-          Showing {enrichedBuilders.length} of{" "}
-          {filteredCount || builders.length} builders
+      {!isSearching && enrichedBuilders.length > 0 && (
+        <div className="flex items-center justify-between px-4 py-3 border-t">
+          <div className="text-sm text-muted-foreground">
+            Showing {enrichedBuilders.length} of{" "}
+            {filteredCount || builders.length} builders
+          </div>
+          {visibleCount < builders.length && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLoadMore}
+              disabled={isLoading}
+            >
+              {isLoading ? "Loading..." : "Load More"}
+            </Button>
+          )}
         </div>
-        {visibleCount < builders.length && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleLoadMore}
-            disabled={isLoading}
-          >
-            {isLoading ? "Loading..." : "Load More"}
-          </Button>
-        )}
-      </div>
+      )}
     </div>
   );
 }

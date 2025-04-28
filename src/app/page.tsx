@@ -4,7 +4,10 @@ import { Metrics } from "@/components/Metrics";
 import { RegistryTabs } from "@/components/RegistryTabs";
 import { Button } from "@/components/ui/button";
 import { getVerificationPartners, getVerifiedBuilders } from "@/services/eas";
-import { processBuilderData } from "@/services/builders";
+import {
+  processBuilderData,
+  enrichBuildersWithNames,
+} from "@/services/builders";
 import { useEffect, useState } from "react";
 import {
   ProcessedBuilder,
@@ -13,6 +16,7 @@ import {
 } from "@/services/builders";
 
 export default function Home() {
+  // State management
   const [builders, setBuilders] = useState<ProcessedBuilder[]>([]);
   const [filteredBuilders, setFilteredBuilders] = useState<ProcessedBuilder[]>(
     []
@@ -26,38 +30,47 @@ export default function Home() {
     totalPartners: 0,
     totalAttestations: 0,
   });
+
+  // UI state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Filter state
   const [builderSearchTerm, setBuilderSearchTerm] = useState("");
   const [partnerSearchTerm, setPartnerSearchTerm] = useState("");
   const [selectedPartnerId, setSelectedPartnerId] = useState<string | null>(
     null
   );
 
+  // Initial data fetch
   useEffect(() => {
     const fetchData = async () => {
       try {
         setError(null);
         setLoading(true);
 
+        // Fetch attestations in parallel
         const [partnerAttestations, builderAttestations] = await Promise.all([
           getVerificationPartners(),
           getVerifiedBuilders(),
         ]);
 
+        // Process builder and partner data
         const { builders, partners, metrics } = await processBuilderData(
           builderAttestations,
           partnerAttestations
         );
 
-        // Sort partners by verifiedBuildersCount (descending) and then by name (alphabetically)
+        // Sort partners by verification count and name
         const sortedPartners = [...partners].sort((a, b) => {
           if (b.verifiedBuildersCount !== a.verifiedBuildersCount) {
             return b.verifiedBuildersCount - a.verifiedBuildersCount;
           }
           return a.name.localeCompare(b.name);
-        }) as ProcessedPartner[];
+        });
 
+        // Update state with initial data
         setBuilders(builders);
         setFilteredBuilders(builders);
         setPartners(sortedPartners);
@@ -82,15 +95,15 @@ export default function Home() {
   useEffect(() => {
     let filtered = builders;
 
+    // Apply address search filter
     if (builderSearchTerm) {
       const term = builderSearchTerm.toLowerCase();
-      filtered = filtered.filter((builder) => {
-        if (builder.ens?.toLowerCase().includes(term)) return true;
-        if (builder.address.toLowerCase().includes(term)) return true;
-        return false;
-      });
+      filtered = filtered.filter((builder) =>
+        builder.address.toLowerCase().includes(term)
+      );
     }
 
+    // Apply partner filter
     if (selectedPartnerId && selectedPartnerId !== "all") {
       filtered = filtered.filter((builder) =>
         builder.attestations.some(
@@ -119,85 +132,140 @@ export default function Home() {
     setFilteredPartners(filtered);
   }, [partners, partnerSearchTerm]);
 
+  // Handle builder search with loading state
+  const handleBuilderSearch = async (value: string) => {
+    setIsSearching(true);
+    try {
+      setBuilderSearchTerm(value);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   if (loading) {
-    return (
-      <div className="container mx-auto p-4">
-        <div className="flex flex-col items-center text-center space-y-6 py-16">
-          <h1 className="text-4xl font-bold max-w-2xl">
-            Verified Registry of Onchain Builders
-          </h1>
-          <p className="text-muted-foreground">
-            Loading onchain attestations...
-          </p>
-        </div>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   if (error) {
-    return (
-      <div className="container mx-auto p-4">
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
-          <h2 className="text-xl font-semibold">Error</h2>
-          <p>{error}</p>
-          <Button className="mt-4" onClick={() => window.location.reload()}>
-            Try Again
-          </Button>
-        </div>
-      </div>
-    );
+    return <ErrorState error={error} />;
   }
 
   return (
     <div className="space-y-16">
+      <Header />
+      <Metrics data={metrics} />
+      <BuilderRegistry
+        builders={filteredBuilders}
+        partners={filteredPartners}
+        onBuilderSearch={handleBuilderSearch}
+        onPartnerSearch={setPartnerSearchTerm}
+        onPartnerFilter={setSelectedPartnerId}
+        availablePartners={partners
+          .map((p) => ({
+            id: p.attestationUID,
+            name: p.name,
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name))}
+        isSearching={isSearching}
+      />
+    </div>
+  );
+}
+
+// Component for the header section
+function Header() {
+  return (
+    <div className="flex flex-col items-center text-center space-y-6 py-16">
+      <h1 className="text-4xl font-bold max-w-2xl">
+        Verified Registry of Onchain Builders
+      </h1>
+      <p className="text-muted-foreground max-w-2xl">
+        The first community-sourced directory that recognizes real onchain
+        builders through verified attestations. Join as a partner before April
+        21st to be featured on Times Square.
+      </p>
+      <div className="flex gap-4">
+        <Button asChild>
+          <a
+            href="https://talentprotocol.notion.site/buildersday2025-partners?pvs=4"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Become a Partner
+          </a>
+        </Button>
+        <Button variant="outline" asChild>
+          <a
+            href="https://talentprotocol.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Create Builder Profile
+          </a>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// Component for the builder registry section
+function BuilderRegistry({
+  builders,
+  partners,
+  onBuilderSearch,
+  onPartnerSearch,
+  onPartnerFilter,
+  availablePartners,
+  isSearching,
+}: {
+  builders: ProcessedBuilder[];
+  partners: ProcessedPartner[];
+  onBuilderSearch: (value: string) => void;
+  onPartnerSearch: (value: string) => void;
+  onPartnerFilter: (partnerId: string | null) => void;
+  availablePartners: { id: string; name: string }[];
+  isSearching: boolean;
+}) {
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-semibold">Builder Registry</h2>
+      <RegistryTabs
+        builders={builders}
+        partners={partners}
+        onBuilderSearch={onBuilderSearch}
+        onPartnerSearch={onPartnerSearch}
+        onPartnerFilter={onPartnerFilter}
+        availablePartners={availablePartners}
+        isSearching={isSearching}
+      />
+    </div>
+  );
+}
+
+// Component for the loading state
+function LoadingState() {
+  return (
+    <div className="container mx-auto p-4">
       <div className="flex flex-col items-center text-center space-y-6 py-16">
         <h1 className="text-4xl font-bold max-w-2xl">
           Verified Registry of Onchain Builders
         </h1>
-        <p className="text-muted-foreground max-w-2xl">
-          The first community-sourced directory that recognizes real onchain
-          builders through verified attestations. Join as a partner before April
-          21st to be featured on Times Square.
-        </p>
-        <div className="flex gap-4">
-          <Button asChild>
-            <a
-              href="https://talentprotocol.notion.site/buildersday2025-partners?pvs=4"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Become a Partner
-            </a>
-          </Button>
-          <Button variant="outline" asChild>
-            <a
-              href="https://talentprotocol.com"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Create Builder Profile
-            </a>
-          </Button>
-        </div>
+        <p className="text-muted-foreground">Loading onchain attestations...</p>
       </div>
+    </div>
+  );
+}
 
-      <Metrics data={metrics} />
-
-      <div className="space-y-6">
-        <h2 className="text-2xl font-semibold">Builder Registry</h2>
-        <RegistryTabs
-          builders={filteredBuilders}
-          partners={filteredPartners}
-          onBuilderSearch={setBuilderSearchTerm}
-          onPartnerSearch={setPartnerSearchTerm}
-          onPartnerFilter={setSelectedPartnerId}
-          availablePartners={partners
-            .map((p) => ({
-              id: p.attestationUID,
-              name: p.name,
-            }))
-            .sort((a, b) => a.name.localeCompare(b.name))}
-        />
+// Component for the error state
+function ErrorState({ error }: { error: string }) {
+  return (
+    <div className="container mx-auto p-4">
+      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
+        <h2 className="text-xl font-semibold">Error</h2>
+        <p>{error}</p>
+        <Button className="mt-4" onClick={() => window.location.reload()}>
+          Try Again
+        </Button>
       </div>
     </div>
   );
