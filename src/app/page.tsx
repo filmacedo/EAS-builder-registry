@@ -168,6 +168,7 @@ export default function Home() {
           .sort((a, b) => a.name.localeCompare(b.name))}
         isSearching={isSearching}
       />
+      <Footer />
     </div>
   );
 }
@@ -180,9 +181,8 @@ function Header() {
         Verified Registry of Onchain Builders
       </h1>
       <p className="text-muted-foreground max-w-2xl">
-        The first community-sourced directory that recognizes real onchain
-        builders through verified attestations. Join as a partner before April
-        21st to be featured on Times Square.
+        The first community-sourced directory that recognizes real builders via
+        onchain attestations. All builders are verified by trusted partners.
       </p>
       <div className="flex gap-4">
         <Button asChild>
@@ -196,11 +196,11 @@ function Header() {
         </Button>
         <Button variant="outline" asChild>
           <a
-            href="https://talentprotocol.com"
+            href="https://app.deform.cc/form/e0ae9d27-660e-4d34-8089-a1ec57d9ceef"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Create Builder Profile
+            Join as Builder
           </a>
         </Button>
       </div>
@@ -268,5 +268,77 @@ function ErrorState({ error }: { error: string }) {
         </Button>
       </div>
     </div>
+  );
+}
+
+// Footer component
+function Footer() {
+  return (
+    <footer className="border-t mt-16 py-8">
+      <div className="container mx-auto px-4">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-muted-foreground">
+          {/* Credits - Left aligned */}
+          <div className="flex flex-col items-center md:items-start">
+            <p>
+              Vibe coded by{" "}
+              <a
+                href="https://x.com/0xmacedo"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-foreground transition-colors"
+              >
+                macedo.eth
+              </a>
+              {", with data from "}
+              <a
+                href="https://talentprotocol.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-foreground transition-colors"
+              >
+                Talent Protocol
+              </a>
+              {" and "}
+              <a
+                href="https://attest.sh"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-foreground transition-colors"
+              >
+                EAS
+              </a>
+            </p>
+          </div>
+
+          {/* Links - Left aligned on mobile, right aligned on desktop */}
+          <div className="flex gap-6 w-full md:w-auto justify-start md:justify-end">
+            <a
+              href="https://app.deform.cc/form/e0ae9d27-660e-4d34-8089-a1ec57d9ceef"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
+              Join as Builder
+            </a>
+            <a
+              href="https://talentprotocol.notion.site/buildersday2025-partners?pvs=4"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
+              Become a Partner
+            </a>
+            <a
+              href="https://talentprotocol.notion.site/Builder-Registry-FAQ-1cbfc9bb5319805a9643c9c91f318d8d?pvs=4"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
+              FAQ
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
   );
 }
