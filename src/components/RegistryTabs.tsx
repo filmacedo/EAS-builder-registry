@@ -46,6 +46,7 @@ export function RegistryTabs({
   const [activeTab, setActiveTab] = useState("builders");
   const [searchValue, setSearchValue] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [partnerSearchQuery, setPartnerSearchQuery] = useState("");
   const [selectedPartner, setSelectedPartner] = useState<{
     id: string;
     name: string;
@@ -60,6 +61,7 @@ export function RegistryTabs({
       setSearchQuery(searchValue);
     } else {
       onPartnerSearch(searchValue);
+      setPartnerSearchQuery(searchValue);
     }
   };
 
@@ -73,10 +75,11 @@ export function RegistryTabs({
   // Clear search query and results
   const clearSearch = () => {
     setSearchValue("");
-    setSearchQuery("");
     if (activeTab === "builders") {
+      setSearchQuery("");
       onBuilderSearch("");
     } else {
+      setPartnerSearchQuery("");
       onPartnerSearch("");
     }
   };
@@ -113,8 +116,20 @@ export function RegistryTabs({
   // Reset all filters when changing tabs
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    clearSearch();
+    setSearchValue("");
+    if (value === "builders") {
+      setPartnerSearchQuery("");
+      onPartnerSearch("");
+    } else {
+      setSearchQuery("");
+      onBuilderSearch("");
+    }
     clearPartnerFilter();
+  };
+
+  // Get current active search query based on tab
+  const getActiveSearchQuery = () => {
+    return activeTab === "builders" ? searchQuery : partnerSearchQuery;
   };
 
   // Render a filter pill
@@ -191,15 +206,16 @@ export function RegistryTabs({
         </div>
 
         {/* Active Filters Display */}
-        {(searchQuery || selectedPartner) && (
+        {(getActiveSearchQuery() ||
+          (activeTab === "builders" && selectedPartner)) && (
           <div className="flex items-center gap-2 flex-wrap">
-            {searchQuery && (
+            {getActiveSearchQuery() && (
               <FilterPill
-                text={formatSearchQuery(searchQuery)}
+                text={formatSearchQuery(getActiveSearchQuery())}
                 onClear={clearSearch}
               />
             )}
-            {selectedPartner && (
+            {activeTab === "builders" && selectedPartner && (
               <FilterPill
                 text={selectedPartner.name}
                 onClear={clearPartnerFilter}
