@@ -4,10 +4,7 @@ import { Metrics } from "@/components/Metrics";
 import { RegistryTabs } from "@/components/RegistryTabs";
 import { Button } from "@/components/ui/button";
 import { getVerificationPartners, getVerifiedBuilders } from "@/services/eas";
-import {
-  processBuilderData,
-  enrichBuildersWithNames,
-} from "@/services/builders";
+import { processBuilderData } from "@/services/builders";
 import { useEffect, useState } from "react";
 import {
   ProcessedBuilder,

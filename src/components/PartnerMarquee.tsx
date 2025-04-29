@@ -42,7 +42,7 @@ export function PartnerMarquee() {
                     src={logo.src}
                     alt={logo.alt}
                     fill
-                    className="object-contain filter grayscale hover:grayscale-0 transition-all duration-300"
+                    className="object-contain filter grayscale hover:grayscale-0 transition-all duration-300 dark:invert dark:brightness-200"
                     priority={index < 4}
                   />
                 </div>

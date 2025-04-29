@@ -4,11 +4,12 @@ import "./globals.css";
 import { OnchainKitProvider } from "@/providers/OnchainKitProvider";
 import { Header } from "@/components/layout/Header";
 import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from "@/providers/ThemeProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "EAS Builder Registry",
+  title: "Builder Registry",
   description: "Verified Registry of Onchain Builders",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1",
 };
@@ -19,15 +20,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <OnchainKitProvider>
-          <Header />
-          <main className="container mx-auto px-4 py-6 md:py-8">
-            {children}
-          </main>
-          <Toaster />
-        </OnchainKitProvider>
+        <ThemeProvider>
+          <OnchainKitProvider>
+            <Header />
+            <main className="container mx-auto px-4 py-6 md:py-8">
+              {children}
+            </main>
+            <Toaster />
+          </OnchainKitProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
