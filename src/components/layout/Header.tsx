@@ -10,8 +10,8 @@ export function Header() {
 
   return (
     <header className="border-b">
-      <div className="container flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-6">
+      <div className="flex h-16 items-center px-6 md:px-8">
+        <div className="flex items-center gap-6 flex-1">
           <Link
             href="/"
             className="font-bold hover:text-primary transition-colors"
@@ -42,7 +42,7 @@ export function Header() {
             </Link>
           </nav>
         </div>
-        <div className="flex items-center gap-4">
+        <div>
           <ThemeToggle />
         </div>
       </div>
