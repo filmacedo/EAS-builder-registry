@@ -163,8 +163,8 @@ export function RegistryTabs({
               type="text"
               placeholder={
                 activeTab === "builders"
-                  ? "Search builders by wallet address..."
-                  : "Search partners by name, address or ENS..."
+                  ? "Search wallet address..."
+                  : "Search name or address..."
               }
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}

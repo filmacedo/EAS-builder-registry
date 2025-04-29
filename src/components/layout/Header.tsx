@@ -14,7 +14,7 @@ export function Header() {
         <div className="flex items-center gap-6 flex-1">
           <Link
             href="/"
-            className="font-bold hover:text-primary transition-colors"
+            className="font-bold hover:text-accent transition-colors"
           >
             vBuilders
           </Link>
@@ -23,8 +23,8 @@ export function Header() {
             <Link
               href="/"
               className={cn(
-                "text-sm font-medium transition-colors hover:text-primary",
-                pathname === "/" ? "text-primary" : "text-muted-foreground"
+                "text-sm font-medium transition-colors hover:text-accent",
+                pathname === "/" ? "text-accent" : "text-muted-foreground"
               )}
             >
               Registry
@@ -32,9 +32,9 @@ export function Header() {
             <Link
               href="/manifesto"
               className={cn(
-                "text-sm font-medium transition-colors hover:text-primary",
+                "text-sm font-medium transition-colors hover:text-accent",
                 pathname === "/manifesto"
-                  ? "text-primary"
+                  ? "text-accent"
                   : "text-muted-foreground"
               )}
             >

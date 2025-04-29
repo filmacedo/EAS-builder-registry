@@ -10,27 +10,27 @@ interface CalloutProps {
 }
 
 const variantStyles = {
-  info: "border-l-blue-500 bg-blue-50/50 dark:bg-blue-950/20 dark:border-l-blue-400",
+  info: "border-l-accent bg-accent-light/10 dark:bg-accent-light/20 dark:border-l-accent",
   warning:
-    "border-l-yellow-500 bg-yellow-50/50 dark:bg-yellow-950/20 dark:border-l-yellow-400",
+    "border-l-accent bg-accent-light/20 dark:bg-accent-light/30 dark:border-l-accent",
   error:
-    "border-l-red-500 bg-red-50/50 dark:bg-red-950/20 dark:border-l-red-400",
+    "border-l-destructive bg-destructive/10 dark:bg-destructive/20 dark:border-l-destructive",
   success:
-    "border-l-green-500 bg-green-50/50 dark:bg-green-950/20 dark:border-l-green-400",
+    "border-l-accent bg-accent-light/10 dark:bg-accent-light/20 dark:border-l-accent",
 };
 
 const titleStyles = {
-  info: "text-blue-950 dark:text-blue-100",
-  warning: "text-yellow-950 dark:text-yellow-100",
-  error: "text-red-950 dark:text-red-100",
-  success: "text-green-950 dark:text-green-100",
+  info: "text-accent dark:text-accent",
+  warning: "text-accent dark:text-accent",
+  error: "text-destructive dark:text-destructive",
+  success: "text-accent dark:text-accent",
 };
 
 const textStyles = {
-  info: "text-blue-800/80 dark:text-blue-200/80",
-  warning: "text-yellow-800/80 dark:text-yellow-200/80",
-  error: "text-red-800/80 dark:text-red-200/80",
-  success: "text-green-800/80 dark:text-green-200/80",
+  info: "text-accent/80 dark:text-accent/80",
+  warning: "text-accent/80 dark:text-accent/80",
+  error: "text-destructive/80 dark:text-destructive/80",
+  success: "text-accent/80 dark:text-accent/80",
 };
 
 export function Callout({

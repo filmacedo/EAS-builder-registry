@@ -8,8 +8,8 @@ interface NetworkBadgeProps {
 
 export function NetworkBadge({ network, className }: NetworkBadgeProps) {
   const networkStyles = {
-    base: "bg-blue-100 text-blue-800",
-    celo: "bg-yellow-100 text-yellow-800",
+    base: "bg-[#7B68EE] text-white",
+    celo: "bg-[#C2DC86] text-black",
   };
 
   return (

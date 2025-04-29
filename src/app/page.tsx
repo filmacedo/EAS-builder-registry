@@ -12,6 +12,7 @@ import {
   ProcessedMetrics,
 } from "@/services/builders";
 import { PartnerMarquee } from "@/components/PartnerMarquee";
+import { Footer } from "@/components/layout/Footer";
 
 export default function Home() {
   // State management
@@ -149,28 +150,30 @@ export default function Home() {
   }
 
   return (
-    <div className="space-y-16">
-      <Header />
-      <PartnerMarquee />
-      <div>
-        <Metrics data={metrics} />
+    <>
+      <div className="space-y-16">
+        <Header />
+        <PartnerMarquee />
+        <div>
+          <Metrics data={metrics} />
+        </div>
+        <BuilderRegistry
+          builders={filteredBuilders}
+          partners={filteredPartners}
+          onBuilderSearch={handleBuilderSearch}
+          onPartnerSearch={setPartnerSearchTerm}
+          onPartnerFilter={setSelectedPartnerId}
+          availablePartners={partners
+            .map((p) => ({
+              id: p.attestationUID,
+              name: p.name,
+            }))
+            .sort((a, b) => a.name.localeCompare(b.name))}
+          isSearching={isSearching}
+        />
       </div>
-      <BuilderRegistry
-        builders={filteredBuilders}
-        partners={filteredPartners}
-        onBuilderSearch={handleBuilderSearch}
-        onPartnerSearch={setPartnerSearchTerm}
-        onPartnerFilter={setSelectedPartnerId}
-        availablePartners={partners
-          .map((p) => ({
-            id: p.attestationUID,
-            name: p.name,
-          }))
-          .sort((a, b) => a.name.localeCompare(b.name))}
-        isSearching={isSearching}
-      />
       <Footer />
-    </div>
+    </>
   );
 }
 
@@ -178,7 +181,7 @@ export default function Home() {
 function Header() {
   return (
     <div className="flex flex-col items-center text-center space-y-6 py-16">
-      <h1 className="text-4xl font-bold max-w-2xl">
+      <h1 className="font-bold max-w-2xl">
         Verified Registry of Onchain Builders
       </h1>
       <p className="text-muted-foreground max-w-2xl">
@@ -248,7 +251,7 @@ function LoadingState() {
   return (
     <div className="container mx-auto p-4">
       <div className="flex flex-col items-center text-center space-y-6 py-16">
-        <h1 className="text-4xl font-bold max-w-2xl">
+        <h1 className="font-bold max-w-2xl">
           Verified Registry of Onchain Builders
         </h1>
         <p className="text-muted-foreground">Loading onchain attestations...</p>
@@ -269,77 +272,5 @@ function ErrorState({ error }: { error: string }) {
         </Button>
       </div>
     </div>
-  );
-}
-
-// Footer component
-function Footer() {
-  return (
-    <footer className="border-t mt-16 py-8">
-      <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-muted-foreground">
-          {/* Credits - Left aligned */}
-          <div className="flex flex-col items-center md:items-start">
-            <p>
-              Vibe coded by{" "}
-              <a
-                href="https://x.com/0xmacedo"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-foreground transition-colors"
-              >
-                macedo.eth
-              </a>
-              {", with data from "}
-              <a
-                href="https://talentprotocol.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-foreground transition-colors"
-              >
-                Talent Protocol
-              </a>
-              {" and "}
-              <a
-                href="https://attest.sh"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-foreground transition-colors"
-              >
-                EAS
-              </a>
-            </p>
-          </div>
-
-          {/* Links - Left aligned on mobile, right aligned on desktop */}
-          <div className="flex gap-6 w-full md:w-auto justify-start md:justify-end">
-            <a
-              href="https://app.deform.cc/form/e0ae9d27-660e-4d34-8089-a1ec57d9ceef"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-foreground transition-colors"
-            >
-              Join as Builder
-            </a>
-            <a
-              href="https://talentprotocol.notion.site/buildersday2025-partners?pvs=4"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-foreground transition-colors"
-            >
-              Become a Partner
-            </a>
-            <a
-              href="https://talentprotocol.notion.site/Builder-Registry-FAQ-1cbfc9bb5319805a9643c9c91f318d8d?pvs=4"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-foreground transition-colors"
-            >
-              FAQ
-            </a>
-          </div>
-        </div>
-      </div>
-    </footer>
   );
 }
