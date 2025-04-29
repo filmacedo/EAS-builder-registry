@@ -14,6 +14,7 @@ import {
   ProcessedPartner,
   ProcessedMetrics,
 } from "@/services/builders";
+import { PartnerMarquee } from "@/components/PartnerMarquee";
 
 export default function Home() {
   // State management
@@ -153,7 +154,10 @@ export default function Home() {
   return (
     <div className="space-y-16">
       <Header />
-      <Metrics data={metrics} />
+      <PartnerMarquee />
+      <div>
+        <Metrics data={metrics} />
+      </div>
       <BuilderRegistry
         builders={filteredBuilders}
         partners={filteredPartners}

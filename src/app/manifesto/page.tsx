@@ -12,6 +12,19 @@ export default function ManifestoPage() {
       <div className="prose prose-lg dark:prose-invert">
         <h1 className="text-4xl font-bold mb-8">Builders Manifesto</h1>
 
+        <div className="relative w-full aspect-video mb-12">
+          <iframe
+            className="absolute top-0 left-0 w-full h-full rounded-lg"
+            src="https://www.youtube.com/embed/bP0AxlHJDZ4?si=kJsiWBL4kZfzgMgU"
+            title="YouTube video player"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerPolicy="strict-origin-when-cross-origin"
+            allowFullScreen
+            aria-label="Builders Manifesto video"
+            loading="lazy"
+          />
+        </div>
+
         <div className="mb-12">
           <h2 className="text-2xl font-semibold mb-6">About Builders Day</h2>
           <p className="text-lg mb-4">

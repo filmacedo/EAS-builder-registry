@@ -23,15 +23,13 @@ export function Header() {
 
           <nav className="flex items-center space-x-6">
             <Link
-              href="/partners"
+              href="/"
               className={cn(
                 "text-sm font-medium transition-colors hover:text-primary",
-                pathname === "/partners"
-                  ? "text-primary"
-                  : "text-muted-foreground"
+                pathname === "/" ? "text-primary" : "text-muted-foreground"
               )}
             >
-              Partners
+              Registry
             </Link>
             <Link
               href="/manifesto"
