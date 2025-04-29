@@ -5,6 +5,7 @@ import { OnchainKitProvider } from "@/providers/OnchainKitProvider";
 import { Header } from "@/components/layout/Header";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/providers/ThemeProvider";
+import { Analytics } from "@vercel/analytics/react";
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -32,6 +33,7 @@ export default function RootLayout({
               {children}
             </main>
             <Toaster />
+            <Analytics />
           </OnchainKitProvider>
         </ThemeProvider>
       </body>
