@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { getVerificationPartners, getVerifiedBuilders } from "@/services/eas";
 import { processBuilderData } from "@/services/builders";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import {
   ProcessedBuilder,
   ProcessedPartner,
@@ -13,6 +14,44 @@ import {
 } from "@/services/builders";
 import { PartnerMarquee } from "@/components/PartnerMarquee";
 import { Footer } from "@/components/layout/Footer";
+import { Spinner } from "@/components/ui/spinner";
+
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: [0.25, 0.1, 0.25, 1],
+    },
+  },
+};
+
+const buttonVariants = {
+  hover: {
+    scale: 1.02,
+    transition: {
+      duration: 0.2,
+      ease: "easeInOut",
+    },
+  },
+  tap: {
+    scale: 0.98,
+  },
+};
 
 export default function Home() {
   // State management
@@ -141,10 +180,6 @@ export default function Home() {
     }
   };
 
-  if (loading) {
-    return <LoadingState />;
-  }
-
   if (error) {
     return <ErrorState error={error} />;
   }
@@ -155,22 +190,29 @@ export default function Home() {
         <Header />
         <PartnerMarquee />
         <div>
-          <Metrics data={metrics} />
+          <Metrics data={metrics} isLoading={loading} />
         </div>
-        <BuilderRegistry
-          builders={filteredBuilders}
-          partners={filteredPartners}
-          onBuilderSearch={handleBuilderSearch}
-          onPartnerSearch={setPartnerSearchTerm}
-          onPartnerFilter={setSelectedPartnerId}
-          availablePartners={partners
-            .map((p) => ({
-              id: p.attestationUID,
-              name: p.name,
-            }))
-            .sort((a, b) => a.name.localeCompare(b.name))}
-          isSearching={isSearching}
-        />
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-16 space-y-4">
+            <Spinner size="lg" />
+            <p className="text-muted-foreground">Loading builder registry...</p>
+          </div>
+        ) : (
+          <BuilderRegistry
+            builders={filteredBuilders}
+            partners={filteredPartners}
+            onBuilderSearch={handleBuilderSearch}
+            onPartnerSearch={setPartnerSearchTerm}
+            onPartnerFilter={setSelectedPartnerId}
+            availablePartners={partners
+              .map((p) => ({
+                id: p.attestationUID,
+                name: p.name,
+              }))
+              .sort((a, b) => a.name.localeCompare(b.name))}
+            isSearching={isSearching}
+          />
+        )}
       </div>
       <Footer />
     </>
@@ -180,35 +222,47 @@ export default function Home() {
 // Component for the header section
 function Header() {
   return (
-    <div className="flex flex-col items-center text-center space-y-6 py-16">
-      <h1 className="font-bold max-w-2xl">
+    <motion.div
+      className="flex flex-col items-center text-center space-y-6 py-16"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.h1 className="font-bold max-w-2xl" variants={itemVariants}>
         Verified Registry of Onchain Builders
-      </h1>
-      <p className="text-muted-foreground max-w-2xl">
+      </motion.h1>
+      <motion.p
+        className="text-muted-foreground max-w-2xl"
+        variants={itemVariants}
+      >
         The first community-sourced directory that recognizes real builders via
         onchain attestations. All builders are verified by trusted partners.
-      </p>
-      <div className="flex gap-4">
-        <Button asChild>
-          <a
-            href="https://talentprotocol.notion.site/buildersday2025-partners?pvs=4"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Become a Partner
-          </a>
-        </Button>
-        <Button variant="outline" asChild>
-          <a
-            href="https://app.deform.cc/form/e0ae9d27-660e-4d34-8089-a1ec57d9ceef"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Join as Builder
-          </a>
-        </Button>
-      </div>
-    </div>
+      </motion.p>
+      <motion.div className="flex gap-4" variants={itemVariants}>
+        <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
+          <Button asChild>
+            <a
+              href="https://talentprotocol.notion.site/buildersday2025-partners?pvs=4"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Become a Partner
+            </a>
+          </Button>
+        </motion.div>
+        <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
+          <Button variant="outline" asChild>
+            <a
+              href="https://app.deform.cc/form/e0ae9d27-660e-4d34-8089-a1ec57d9ceef"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Join as Builder
+            </a>
+          </Button>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -231,32 +285,28 @@ function BuilderRegistry({
   isSearching: boolean;
 }) {
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-semibold">Builder Registry</h2>
-      <RegistryTabs
-        builders={builders}
-        partners={partners}
-        onBuilderSearch={onBuilderSearch}
-        onPartnerSearch={onPartnerSearch}
-        onPartnerFilter={onPartnerFilter}
-        availablePartners={availablePartners}
-        isSearching={isSearching}
-      />
-    </div>
-  );
-}
-
-// Component for the loading state
-function LoadingState() {
-  return (
-    <div className="container mx-auto p-4">
-      <div className="flex flex-col items-center text-center space-y-6 py-16">
-        <h1 className="font-bold max-w-2xl">
-          Verified Registry of Onchain Builders
-        </h1>
-        <p className="text-muted-foreground">Loading onchain attestations...</p>
-      </div>
-    </div>
+    <motion.div
+      className="space-y-6"
+      variants={containerVariants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+    >
+      <motion.h2 className="text-2xl font-semibold" variants={itemVariants}>
+        Builder Registry
+      </motion.h2>
+      <motion.div variants={itemVariants}>
+        <RegistryTabs
+          builders={builders}
+          partners={partners}
+          onBuilderSearch={onBuilderSearch}
+          onPartnerSearch={onPartnerSearch}
+          onPartnerFilter={onPartnerFilter}
+          availablePartners={availablePartners}
+          isSearching={isSearching}
+        />
+      </motion.div>
+    </motion.div>
   );
 }
 
