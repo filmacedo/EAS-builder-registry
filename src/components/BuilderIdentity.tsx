@@ -41,6 +41,8 @@ export function BuilderIdentity({
     fetchProfile();
   }, [address]);
 
+  const displayAddress = ens || truncateAddress(address);
+
   return (
     <div className={cn("flex items-center gap-3", className)}>
       <div className={cn("relative shrink-0", sizeClasses[size])}>
@@ -66,7 +68,7 @@ export function BuilderIdentity({
               href={`https://app.talentprotocol.com/wallet/${address}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-medium hover:underline"
+              className="font-medium text-xs text-primary hover:text-accent"
             >
               {displayName}
             </Link>
@@ -74,9 +76,9 @@ export function BuilderIdentity({
               href={`https://etherscan.io/address/${address}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-muted-foreground hover:underline"
+              className="text-xs text-muted-foreground hover:text-accent"
             >
-              {truncateAddress(address)}
+              {displayAddress}
             </Link>
           </>
         ) : ens ? (
@@ -85,7 +87,7 @@ export function BuilderIdentity({
               href={`https://app.ens.domains/${ens}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-medium hover:underline"
+              className="font-medium text-xs text-primary hover:text-accent"
             >
               {ens}
             </Link>
@@ -93,23 +95,21 @@ export function BuilderIdentity({
               href={`https://etherscan.io/address/${address}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-muted-foreground hover:underline"
+              className="text-xs text-muted-foreground hover:text-accent"
             >
-              {truncateAddress(address)}
+              {displayAddress}
             </Link>
           </>
         ) : (
           <>
-            <span className="font-medium text-muted-foreground">
-              {UNNAMED_BUILDER}
-            </span>
+            <span className="font-medium text-xs">{UNNAMED_BUILDER}</span>
             <Link
               href={`https://etherscan.io/address/${address}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-muted-foreground hover:underline"
+              className="text-xs text-muted-foreground hover:text-accent"
             >
-              {truncateAddress(address)}
+              {displayAddress}
             </Link>
           </>
         )}

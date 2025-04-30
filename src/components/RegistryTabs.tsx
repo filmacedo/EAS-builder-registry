@@ -134,7 +134,7 @@ export function RegistryTabs({
 
   // Render a filter pill
   const FilterPill = ({ text, onClear }: FilterPill) => (
-    <Badge variant="secondary" className="flex items-center gap-2">
+    <Badge variant="default" className="flex items-center gap-2">
       {text}
       <button onClick={onClear} className="hover:text-destructive">
         <X className="h-3 w-3" />
@@ -169,7 +169,7 @@ export function RegistryTabs({
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="pl-10 h-11 text-base"
+              className="pl-10 h-11 text-sm"
             />
             <Button
               variant="ghost"
@@ -189,13 +189,19 @@ export function RegistryTabs({
                 onValueChange={handlePartnerFilter}
                 value={selectedPartner?.id || "all"}
               >
-                <SelectTrigger className="w-[200px] h-11 text-base">
+                <SelectTrigger className="w-[200px] h-11 text-sm">
                   <SelectValue placeholder="Verified By" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Partners</SelectItem>
+                  <SelectItem value="all" className="text-sm">
+                    All Partners
+                  </SelectItem>
                   {availablePartners.map((partner) => (
-                    <SelectItem key={partner.id} value={partner.id}>
+                    <SelectItem
+                      key={partner.id}
+                      value={partner.id}
+                      className="text-sm"
+                    >
                       {partner.name}
                     </SelectItem>
                   ))}

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, ArrowUpDown } from "lucide-react";
 import { ProcessedBuilder } from "@/services/builders";
 import { useMemo, memo, useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -31,9 +31,9 @@ const BuilderTableRow = memo(({ builder }: { builder: ProcessedBuilder }) => (
     </td>
     <td className="p-4 w-[10%]">
       {builder.builderScore !== null ? (
-        <span className="font-medium">{builder.builderScore}</span>
+        <span className="font-medium text-xs">{builder.builderScore}</span>
       ) : (
-        <span className="text-muted-foreground">-</span>
+        <span className="text-muted-foreground text-xs">-</span>
       )}
     </td>
     <td className="p-4 w-[15%]">
@@ -45,26 +45,23 @@ const BuilderTableRow = memo(({ builder }: { builder: ProcessedBuilder }) => (
           )}
           target="_blank"
           rel="noopener noreferrer"
+          className="text-xs text-accent hover:text-accent"
         >
-          <Badge variant="partner" className="cursor-pointer max-w-[150px]">
-            <span className="truncate block">
-              {builder.earliestPartnerName}
-            </span>
-          </Badge>
+          {builder.earliestPartnerName}
         </Link>
       ) : (
-        <span className="truncate block max-w-[150px]">
+        <span className="truncate block max-w-[150px] text-xs">
           {builder.earliestPartnerName}
         </span>
       )}
     </td>
     <td className="p-4 w-[15%]">
-      <span className="text-muted-foreground">
+      <span className="text-muted-foreground text-xs">
         {new Date(builder.earliestAttestationDate * 1000).toLocaleDateString()}
       </span>
     </td>
     <td className="p-4 w-[25%]">
-      <span className="text-muted-foreground line-clamp-2 block">
+      <span className="text-muted-foreground line-clamp-2 block text-xs">
         {builder.context}
       </span>
     </td>
@@ -78,7 +75,7 @@ const BuilderTableRow = memo(({ builder }: { builder: ProcessedBuilder }) => (
           )}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex text-muted-foreground hover:text-primary"
+          className="text-xs text-muted-foreground hover:text-accent"
         >
           <ExternalLink className="h-4 w-4" />
         </Link>
@@ -104,45 +101,46 @@ const BuilderCard = memo(({ builder }: { builder: ProcessedBuilder }) => (
           href={`https://base.easscan.org/attestation/view/${builder.earliestAttestationId}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-muted-foreground hover:text-primary"
+          className="text-xs text-accent hover:text-accent"
         >
           <ExternalLink className="h-4 w-4" />
         </Link>
       </div>
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Builder Score:</span>
-          <span className="text-sm">
+          <span className="text-xs text-muted-foreground">Builder Score:</span>
+          <span className="text-xs">
             {builder.builderScore !== null ? builder.builderScore : "-"}
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Verified By:</span>
+          <span className="text-xs text-muted-foreground">Verified By:</span>
           {builder.earliestPartnerAttestationId ? (
             <Link
               href={`https://base.easscan.org/attestation/view/${builder.earliestPartnerAttestationId}`}
               target="_blank"
               rel="noopener noreferrer"
+              className="text-xs text-accent hover:text-accent"
             >
-              <Badge variant="partner" className="cursor-pointer max-w-[200px]">
-                <span className="truncate block">
-                  {builder.earliestPartnerName}
-                </span>
-              </Badge>
+              {builder.earliestPartnerName}
             </Link>
           ) : (
-            <span className="text-sm truncate block max-w-[200px]">
+            <span className="text-xs truncate block max-w-[200px]">
               {builder.earliestPartnerName}
             </span>
           )}
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Verified On:</span>
-          <span className="text-sm">
+          <span className="text-xs text-muted-foreground">Verified On:</span>
+          <span className="text-xs">
             {new Date(
               builder.earliestAttestationDate * 1000
             ).toLocaleDateString()}
           </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">Context:</span>
+          <span className="text-xs line-clamp-2">{builder.context}</span>
         </div>
       </div>
     </div>
@@ -161,14 +159,21 @@ export function BuildersTable({
     []
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const itemsPerPage = 10;
 
-  // Sort builders by verification date (most recent first)
+  // Sort builders by verification date
   const sortedBuilders = useMemo(() => {
-    return [...builders].sort(
-      (a, b) => b.earliestAttestationDate - a.earliestAttestationDate
-    );
-  }, [builders]);
+    return [...builders].sort((a, b) => {
+      const comparison = a.earliestAttestationDate - b.earliestAttestationDate;
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+  }, [builders, sortDirection]);
+
+  // Toggle sort direction
+  const toggleSort = () => {
+    setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+  };
 
   // Get visible builders
   const visibleBuilders = useMemo(() => {
@@ -194,7 +199,7 @@ export function BuildersTable({
     };
 
     loadEnrichedData();
-  }, [visibleCount, builders]);
+  }, [visibleCount, visibleBuilders]);
 
   // Handle load more
   const handleLoadMore = async () => {
@@ -210,7 +215,7 @@ export function BuildersTable({
           <div className="p-8 text-center text-muted-foreground">
             Searching builders...
           </div>
-        ) : enrichedBuilders.length === 0 ? (
+        ) : visibleBuilders.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground">
             No builders found matching your search criteria
           </div>
@@ -218,22 +223,28 @@ export function BuildersTable({
           <table className="w-full caption-bottom text-sm">
             <thead className="border-b">
               <tr className="border-b transition-colors hover:bg-muted/50">
-                <th className="h-12 px-4 text-left align-middle font-medium w-[20%]">
+                <th className="h-12 px-4 text-left align-middle font-medium w-[20%] text-sm">
                   Builder
                 </th>
-                <th className="h-12 px-4 text-left align-middle font-medium w-[10%]">
+                <th className="h-12 px-4 text-left align-middle font-medium w-[10%] text-sm">
                   Score
                 </th>
-                <th className="h-12 px-4 text-left align-middle font-medium w-[15%]">
+                <th className="h-12 px-4 text-left align-middle font-medium w-[15%] text-sm">
                   Verified By
                 </th>
-                <th className="h-12 px-4 text-left align-middle font-medium w-[15%]">
-                  Verified On
+                <th
+                  className="h-12 px-4 text-left align-middle font-medium w-[15%] cursor-pointer hover:bg-muted/50 text-sm"
+                  onClick={toggleSort}
+                >
+                  <div className="flex items-center gap-2">
+                    Verified On
+                    <ArrowUpDown className="h-4 w-4" />
+                  </div>
                 </th>
-                <th className="h-12 px-4 text-left align-middle font-medium w-[25%]">
+                <th className="h-12 px-4 text-left align-middle font-medium w-[25%] text-sm">
                   Context
                 </th>
-                <th className="h-12 px-4 text-center align-middle font-medium w-[5%]">
+                <th className="h-12 px-4 text-center align-middle font-medium w-[5%] text-sm">
                   EAS
                 </th>
               </tr>
@@ -253,7 +264,7 @@ export function BuildersTable({
           <div className="p-4 text-center text-muted-foreground">
             Searching builders...
           </div>
-        ) : enrichedBuilders.length === 0 ? (
+        ) : visibleBuilders.length === 0 ? (
           <div className="p-4 text-center text-muted-foreground">
             No builders found matching your search criteria
           </div>
@@ -265,10 +276,10 @@ export function BuildersTable({
       </div>
 
       {/* Footer with counter and load more button */}
-      {!isSearching && enrichedBuilders.length > 0 && (
+      {!isSearching && visibleBuilders.length > 0 && (
         <div className="flex items-center justify-between px-4 py-3 border-t">
           <div className="text-sm text-muted-foreground">
-            Showing {enrichedBuilders.length} of{" "}
+            Showing {visibleBuilders.length} of{" "}
             {filteredCount || builders.length} builders
           </div>
           {visibleCount < builders.length && (

@@ -15,43 +15,12 @@ import {
 import { PartnerMarquee } from "@/components/PartnerMarquee";
 import { Footer } from "@/components/layout/Footer";
 import { Spinner } from "@/components/ui/spinner";
-
-// Animation variants
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.4,
-      ease: [0.25, 0.1, 0.25, 1],
-    },
-  },
-};
-
-const buttonVariants = {
-  hover: {
-    scale: 1.02,
-    transition: {
-      duration: 0.2,
-      ease: "easeInOut",
-    },
-  },
-  tap: {
-    scale: 0.98,
-  },
-};
+import {
+  containerVariants,
+  itemVariants,
+  buttonVariants,
+} from "@/lib/animations";
+import { ErrorState } from "@/components/ui/error-state";
 
 export default function Home() {
   // State management
@@ -307,20 +276,5 @@ function BuilderRegistry({
         />
       </motion.div>
     </motion.div>
-  );
-}
-
-// Component for the error state
-function ErrorState({ error }: { error: string }) {
-  return (
-    <div className="container mx-auto p-4">
-      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
-        <h2 className="text-xl font-semibold">Error</h2>
-        <p>{error}</p>
-        <Button className="mt-4" onClick={() => window.location.reload()}>
-          Try Again
-        </Button>
-      </div>
-    </div>
   );
 }

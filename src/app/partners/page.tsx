@@ -8,6 +8,7 @@ import { resolveAddresses } from "@/services/ens";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Network, VerificationPartnerAttestation } from "@/types";
+import { ErrorState } from "@/components/ui/error-state";
 
 // Sorting function for partners
 const sortPartners = (a: Partner, b: Partner): number =>
@@ -113,19 +114,7 @@ export default function PartnersPage() {
   }
 
   if (error) {
-    return (
-      <div className="container mx-auto p-4">
-        <Callout
-          title="Error"
-          variant="error"
-          action={
-            <Button onClick={() => window.location.reload()}>Try Again</Button>
-          }
-        >
-          {error}
-        </Callout>
-      </div>
-    );
+    return <ErrorState error={error} />;
   }
 
   return (

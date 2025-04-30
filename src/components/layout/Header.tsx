@@ -38,7 +38,7 @@ export function Header() {
                   : "text-muted-foreground"
               )}
             >
-              Manifesto
+              About
             </Link>
           </nav>
         </div>

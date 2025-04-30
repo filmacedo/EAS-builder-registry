@@ -49,13 +49,13 @@ const PartnerCard = ({ partner }: { partner: ProcessedPartner }) => (
           />
         </div>
         <div className="flex flex-col flex-1">
-          <span className="font-medium">{partner.name}</span>
+          <span className="font-medium text-xs">{partner.name}</span>
           {partner.url && (
             <Link
               href={formatUrl(partner.url)}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-muted-foreground hover:underline inline-flex items-center gap-1"
+              className="text-xs text-muted-foreground hover:text-accent inline-flex items-center gap-1"
             >
               {getDisplayUrl(partner.url)}
               <ExternalLink className="h-3 w-3" />
@@ -68,17 +68,17 @@ const PartnerCard = ({ partner }: { partner: ProcessedPartner }) => (
             href={getEAScanUrl(partner.id, partner.network as Network)}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-muted-foreground hover:text-primary"
+            className="text-muted-foreground hover:text-accent"
           >
             <ExternalLink className="h-4 w-4" />
           </Link>
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">
+        <span className="text-xs text-muted-foreground">
           Verified Builders:
         </span>
-        <span className="text-sm">{partner.verifiedBuildersCount}</span>
+        <span className="text-xs">{partner.verifiedBuildersCount}</span>
       </div>
     </div>
   </div>
@@ -103,16 +103,16 @@ export function PartnersTable({ partners }: PartnersTableProps) {
         <table className="w-full caption-bottom text-sm">
           <thead className="border-b">
             <tr className="border-b transition-colors hover:bg-muted/50">
-              <th className="h-12 px-4 text-left align-middle font-medium w-[40%]">
+              <th className="h-12 px-4 text-left align-middle font-medium w-[40%] text-sm">
                 Partner
               </th>
-              <th className="h-12 px-4 text-left align-middle font-medium w-[30%]">
+              <th className="h-12 px-4 text-left align-middle font-medium w-[30%] text-sm">
                 Attester Address
               </th>
-              <th className="h-12 px-4 text-left align-middle font-medium w-[20%]">
+              <th className="h-12 px-4 text-left align-middle font-medium w-[20%] text-sm">
                 Verified Builders
               </th>
-              <th className="h-12 px-4 text-center align-middle font-medium w-[10%]">
+              <th className="h-12 px-4 text-center align-middle font-medium w-[10%] text-sm">
                 EAS
               </th>
             </tr>
@@ -137,13 +137,15 @@ export function PartnersTable({ partners }: PartnersTableProps) {
                       />
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-medium">{partner.name}</span>
+                      <span className="font-medium text-xs">
+                        {partner.name}
+                      </span>
                       {partner.url && (
                         <Link
                           href={formatUrl(partner.url)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm text-muted-foreground hover:underline inline-flex items-center gap-1"
+                          className="text-xs text-muted-foreground hover:text-accent inline-flex items-center gap-1"
                         >
                           {getDisplayUrl(partner.url)}
                           <ExternalLink className="h-3 w-3" />
@@ -160,7 +162,7 @@ export function PartnersTable({ partners }: PartnersTableProps) {
                           href={`https://app.ens.domains/${partner.ens}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="font-medium hover:underline"
+                          className="font-medium text-xs hover:text-accent"
                         >
                           {partner.ens}
                         </Link>
@@ -168,7 +170,7 @@ export function PartnersTable({ partners }: PartnersTableProps) {
                           href={`https://etherscan.io/address/${partner.address}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm text-muted-foreground hover:underline"
+                          className="text-xs text-muted-foreground hover:text-accent"
                         >
                           {truncateAddress(partner.address)}
                         </Link>
@@ -178,7 +180,7 @@ export function PartnersTable({ partners }: PartnersTableProps) {
                         href={`https://etherscan.io/address/${partner.address}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-medium hover:underline"
+                        className="font-medium text-xs hover:text-accent"
                       >
                         {truncateAddress(partner.address)}
                       </Link>
@@ -186,7 +188,7 @@ export function PartnersTable({ partners }: PartnersTableProps) {
                   </div>
                 </td>
                 <td className="p-4 w-[20%]">
-                  <span className="font-medium">
+                  <span className="font-medium text-xs">
                     {partner.verifiedBuildersCount}
                   </span>
                 </td>
@@ -200,7 +202,7 @@ export function PartnersTable({ partners }: PartnersTableProps) {
                       )}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex text-muted-foreground hover:text-primary"
+                      className="inline-flex text-muted-foreground hover:text-accent"
                     >
                       <ExternalLink className="h-4 w-4" />
                     </Link>
