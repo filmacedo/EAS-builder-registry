@@ -11,6 +11,7 @@ const partnerLogos: PartnerLogo[] = [
   { src: "/logos/base.svg", alt: "Base" },
   { src: "/logos/blockscout.svg", alt: "Blockscout" },
   { src: "/logos/celo.svg", alt: "Celo" },
+  { src: "/logos/eas.svg", alt: "EAS" },
   { src: "/logos/eigenlayer.svg", alt: "EigenLayer" },
   { src: "/logos/ens.svg", alt: "ENS" },
   { src: "/logos/etherscan.svg", alt: "Etherscan" },
