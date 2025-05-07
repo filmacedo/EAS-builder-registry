@@ -13,7 +13,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Verified Builder Registry",
+  title: "Onchain Builder Registry",
   description:
     "A community-powered directory of verified builders backed by onchain attestations.",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   },
   manifest: "/icons/manifest.json",
   openGraph: {
-    title: "Verified Builder Registry",
+    title: "Onchain Builder Registry",
     description:
       "A community-powered directory of verified builders backed by onchain attestations.",
     type: "website",
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Builder Registry",
+    title: "Onchain Builder Registry",
     description: "Verified Registry of Onchain Builders",
     images: ["/og-image.png"],
   },
