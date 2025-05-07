@@ -94,7 +94,7 @@ export default function ManifestoPage() {
 
           {/* Video with same width as containers */}
           <motion.div
-            className="relative w-full aspect-video mb-12"
+            className="relative w-full aspect-video my-12"
             initial={{ scale: 0.98, opacity: 0 }}
             whileInView={{
               scale: 1,
