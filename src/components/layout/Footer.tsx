@@ -40,14 +40,14 @@ export function Footer() {
 
           {/* Links - Left aligned on mobile, right aligned on desktop */}
           <div className="flex gap-6 w-full md:w-auto justify-start md:justify-end">
-            <a
+            {/* <a
               href="https://app.deform.cc/form/3c9a7879-2a22-426a-ab89-eba8c6055204"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-accent transition-colors"
             >
               Join as Builder
-            </a>
+            </a> */}
             <a
               href="https://talentprotocol.notion.site/buildersday2025-partners?pvs=4"
               target="_blank"

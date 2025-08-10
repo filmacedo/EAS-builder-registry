@@ -211,6 +211,17 @@ function Header() {
         <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
           <Button asChild>
             <a
+              href="https://x.com/TalentProtocol/status/1918303376447816130/video/1"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Watch Video
+            </a>
+          </Button>
+        </motion.div>
+        <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
+          <Button variant="outline" asChild>
+            <a
               href="https://talentprotocol.notion.site/buildersday2025-partners?pvs=4"
               target="_blank"
               rel="noopener noreferrer"
@@ -219,7 +230,7 @@ function Header() {
             </a>
           </Button>
         </motion.div>
-        <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
+        {/* <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
           <Button variant="outline" asChild>
             <a
               href="https://app.deform.cc/form/3c9a7879-2a22-426a-ab89-eba8c6055204"
@@ -229,7 +240,7 @@ function Header() {
               Join as Builder
             </a>
           </Button>
-        </motion.div>
+        </motion.div> */}
       </motion.div>
     </motion.div>
   );
