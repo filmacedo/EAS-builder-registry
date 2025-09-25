@@ -220,14 +220,8 @@ function Header() {
           </Button>
         </motion.div>
         <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
-          <Button variant="outline" asChild>
-            <a
-              href="https://talentprotocol.notion.site/buildersday2025-partners?pvs=4"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Become a Partner
-            </a>
+          <Button variant="outline" disabled>
+            Become a Partner
           </Button>
         </motion.div>
         {/* <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">

@@ -21,8 +21,9 @@ const CELO_BUILDER_SCHEMA_UID =
 const partnerSchemaEncoder = new SchemaEncoder("string name,string url");
 const builderSchemaEncoder = new SchemaEncoder("bool isBuilder,string context");
 
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000; // 1 second
+const MAX_RETRIES = 2;
+const RETRY_DELAY = 1000;
+const PAGE_SIZE = 200; // Reduced to prevent timeouts
 
 async function fetchWithRetry<T>(
   fetchFn: () => Promise<T>,
@@ -76,142 +77,116 @@ async function fetchFromEAS(query: string, network: Network) {
 export async function getAllAttestations() {
   return fetchWithRetry(async () => {
     try {
-      const PAGE_SIZE = 1000;
       let allPartners: any[] = [];
       let allBuilders: any[] = [];
       let skip = 0;
       let hasMore = true;
-      let pageCount = 0;
 
-      // Fetch all partner attestations from both networks
+      // Try both networks, but continue if one fails
       for (const network of ["base", "celo"] as Network[]) {
-        skip = 0;
-        hasMore = true;
-        pageCount = 0;
+        try {
+          const schemaUID =
+            network === "base"
+              ? BASE_PARTNER_SCHEMA_UID
+              : CELO_PARTNER_SCHEMA_UID;
 
-        const schemaUID =
-          network === "base"
-            ? BASE_PARTNER_SCHEMA_UID
-            : CELO_PARTNER_SCHEMA_UID;
-
-        while (hasMore) {
-          pageCount++;
-          const response = await fetchFromEAS(
-            `
-            query GetAllAttestations {
-              partners: attestations(
-                where: {
-                  schemaId: { equals: "${schemaUID}" }
-                  revoked: { equals: false }
+          // Fetch partners
+          skip = 0;
+          hasMore = true;
+          while (hasMore) {
+            const response = await fetchFromEAS(
+              `
+              query GetAllAttestations {
+                partners: attestations(
+                  where: {
+                    schemaId: { equals: "${schemaUID}" }
+                    revoked: { equals: false }
+                  }
+                  take: ${PAGE_SIZE}
+                  skip: ${skip}
+                ) {
+                  id
+                  attester
+                  recipient
+                  refUID
+                  revocationTime
+                  expirationTime
+                  time
+                  txid
+                  data
                 }
-                take: ${PAGE_SIZE}
-                skip: ${skip}
-              ) {
-                id
-                attester
-                recipient
-                refUID
-                revocationTime
-                expirationTime
-                time
-                txid
-                data
               }
-            }
-          `,
-            network
-          );
-
-          if (!response || !response.partners) {
-            throw new Error(
-              `Invalid response structure from EAS API for partners on ${network}`
+            `,
+              network
             );
+
+            if (response?.partners) {
+              const networkAttestations = response.partners.map(
+                (attestation: any) => ({ ...attestation, network })
+              );
+              allPartners = [...allPartners, ...networkAttestations];
+              hasMore = response.partners.length === PAGE_SIZE;
+              skip += PAGE_SIZE;
+            } else {
+              hasMore = false;
+            }
           }
 
-          // Add network information to each attestation
-          const networkAttestations = response.partners.map(
-            (attestation: any) => ({
-              ...attestation,
-              network,
-            })
-          );
+          // Fetch builders
+          const builderSchemaUID =
+            network === "base"
+              ? BASE_BUILDER_SCHEMA_UID
+              : CELO_BUILDER_SCHEMA_UID;
 
-          allPartners = [...allPartners, ...networkAttestations];
-          hasMore = response.partners.length === PAGE_SIZE;
-          skip += PAGE_SIZE;
+          skip = 0;
+          hasMore = true;
+          while (hasMore) {
+            const response = await fetchFromEAS(
+              `
+              query GetAllAttestations {
+                builders: attestations(
+                  where: {
+                    schemaId: { equals: "${builderSchemaUID}" }
+                    revoked: { equals: false }
+                  }
+                  take: ${PAGE_SIZE}
+                  skip: ${skip}
+                ) {
+                  id
+                  attester
+                  recipient
+                  refUID
+                  revocationTime
+                  expirationTime
+                  time
+                  txid
+                  data
+                }
+              }
+            `,
+              network
+            );
 
-          if (hasMore) {
-            await new Promise((resolve) => setTimeout(resolve, 500));
+            if (response?.builders) {
+              const networkAttestations = response.builders.map(
+                (attestation: any) => ({ ...attestation, network })
+              );
+              allBuilders = [...allBuilders, ...networkAttestations];
+              hasMore = response.builders.length === PAGE_SIZE;
+              skip += PAGE_SIZE;
+            } else {
+              hasMore = false;
+            }
           }
+        } catch (error) {
+          console.warn(`Failed to fetch from ${network} network:`, error);
+          // Continue with other networks
         }
       }
 
-      // Reset for builder attestations
-      skip = 0;
-      hasMore = true;
-      pageCount = 0;
-
-      // Fetch all builder attestations from both networks
-      for (const network of ["base", "celo"] as Network[]) {
-        skip = 0;
-        hasMore = true;
-        pageCount = 0;
-
-        const schemaUID =
-          network === "base"
-            ? BASE_BUILDER_SCHEMA_UID
-            : CELO_BUILDER_SCHEMA_UID;
-
-        while (hasMore) {
-          pageCount++;
-          const response = await fetchFromEAS(
-            `
-            query GetAllAttestations {
-              builders: attestations(
-                where: {
-                  schemaId: { equals: "${schemaUID}" }
-                  revoked: { equals: false }
-                }
-                take: ${PAGE_SIZE}
-                skip: ${skip}
-              ) {
-                id
-                attester
-                recipient
-                refUID
-                revocationTime
-                expirationTime
-                time
-                txid
-                data
-              }
-            }
-          `,
-            network
-          );
-
-          if (!response || !response.builders) {
-            throw new Error(
-              `Invalid response structure from EAS API for builders on ${network}`
-            );
-          }
-
-          // Add network information to each attestation
-          const networkAttestations = response.builders.map(
-            (attestation: any) => ({
-              ...attestation,
-              network,
-            })
-          );
-
-          allBuilders = [...allBuilders, ...networkAttestations];
-          hasMore = response.builders.length === PAGE_SIZE;
-          skip += PAGE_SIZE;
-
-          if (hasMore) {
-            await new Promise((resolve) => setTimeout(resolve, 500));
-          }
-        }
+      // If no data from any network, throw error
+      if (allPartners.length === 0 && allBuilders.length === 0) {
+        throw new Error("Failed to fetch data from all EAS networks");
       }
 
       return {
@@ -220,12 +195,6 @@ export async function getAllAttestations() {
       };
     } catch (error) {
       console.error("Error in getAllAttestations:", error);
-      if (error instanceof Error) {
-        console.error("Error details:", {
-          message: error.message,
-          stack: error.stack,
-        });
-      }
       throw error;
     }
   });
@@ -237,37 +206,44 @@ export async function getVerificationPartners(): Promise<
   const data = await getAllAttestations();
   const attestations = data.partners;
 
-  // First decode the attestations
-  const decodedAttestations = attestations.map((attestation: any) => {
-    try {
-      if (!attestation.data || attestation.data === "0x") {
+  // Only include attestations issued by Talent Protocol
+  const TALENT_PROTOCOL_ATTESTER = "0x574D993813e5bAB85c7B7761B35C207Ad426D9cC"; // attestations.talentprotocol.eth
+
+  // First decode the attestations and filter by issuer
+  const decodedAttestations = attestations
+    .filter(
+      (attestation: any) => attestation.attester === TALENT_PROTOCOL_ATTESTER
+    )
+    .map((attestation: any) => {
+      try {
+        if (!attestation.data || attestation.data === "0x") {
+          return {
+            ...attestation,
+            decodedData: null,
+          };
+        }
+
+        const decodedData = partnerSchemaEncoder.decodeData(attestation.data);
+        const name = decodedData.find((d) => d.name === "name")?.value
+          .value as string;
+        const url = decodedData.find((d) => d.name === "url")?.value
+          .value as string;
+
+        return {
+          ...attestation,
+          decodedData: {
+            name,
+            url,
+          },
+        };
+      } catch (error) {
+        console.error("Error decoding partner data:", error);
         return {
           ...attestation,
           decodedData: null,
         };
       }
-
-      const decodedData = partnerSchemaEncoder.decodeData(attestation.data);
-      const name = decodedData.find((d) => d.name === "name")?.value
-        .value as string;
-      const url = decodedData.find((d) => d.name === "url")?.value
-        .value as string;
-
-      return {
-        ...attestation,
-        decodedData: {
-          name,
-          url,
-        },
-      };
-    } catch (error) {
-      console.error("Error decoding partner data:", error);
-      return {
-        ...attestation,
-        decodedData: null,
-      };
-    }
-  });
+    });
 
   // Return the decoded attestations without ENS resolution
   return decodedAttestations;
