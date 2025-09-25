@@ -85,11 +85,31 @@ export default function Home() {
         setMetrics(metrics);
       } catch (error) {
         console.error("Error fetching data:", error);
-        setError(
-          error instanceof Error
-            ? error.message
-            : "An error occurred while fetching data"
-        );
+
+        // Provide more specific error messages based on the error type
+        let errorMessage = "An error occurred while fetching data";
+
+        if (error instanceof Error) {
+          if (
+            error.message.includes("Failed to fetch data from all EAS networks")
+          ) {
+            errorMessage =
+              "Unable to connect to verification networks. Please try again later.";
+          } else if (error.message.includes("Circuit breaker is OPEN")) {
+            errorMessage =
+              "Some verification networks are temporarily unavailable. Showing available data.";
+          } else if (
+            error.message.includes("timeout") ||
+            error.message.includes("TIMEOUT")
+          ) {
+            errorMessage =
+              "Network request timed out. Please check your connection and try again.";
+          } else {
+            errorMessage = error.message;
+          }
+        }
+
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -205,7 +225,8 @@ function Header() {
         variants={itemVariants}
       >
         The first community-sourced directory that recognizes real builders via
-        onchain attestations. All builders are verified by trusted partners.
+        onchain attestations. All builders were verified by trusted partners.
+        Next verification round in 2026.
       </motion.p>
       <motion.div className="flex gap-4" variants={itemVariants}>
         <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
@@ -219,11 +240,17 @@ function Header() {
             </a>
           </Button>
         </motion.div>
-        <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
-          <Button variant="outline" disabled>
-            Become a Partner
+        {/* <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
+          <Button variant="outline" asChild>
+            <a
+              href="https://talentprotocol.notion.site/buildersday2025-partners?pvs=4"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Become a Partner
+            </a>
           </Button>
-        </motion.div>
+        </motion.div> */}
         {/* <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
           <Button variant="outline" asChild>
             <a
