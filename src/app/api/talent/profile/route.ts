@@ -107,14 +107,8 @@ export async function GET(request: Request) {
   }
 
   if (!process.env.TALENT_API_KEY) {
-    logError(
-      "TalentProtocolAPI",
-      new Error("TALENT_API_KEY is not configured")
-    );
-    return NextResponse.json(
-      { error: "Server configuration error" },
-      { status: 500 }
-    );
+    // Return empty response instead of error - Talent Protocol is optional
+    return NextResponse.json({}, { status: 200 });
   }
 
   try {

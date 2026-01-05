@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { OnchainKitProvider } from "@/providers/OnchainKitProvider";
@@ -13,10 +13,12 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://builders.talentprotocol.com"
+  ),
   title: "Onchain Builder Registry",
   description:
     "A community-powered directory of verified builders backed by onchain attestations.",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
   icons: {
     icon: [
       { url: "/icons/favicon-16x16.png", sizes: "16x16", type: "image/png" },
@@ -47,6 +49,12 @@ export const metadata: Metadata = {
     description: "Verified Registry of Onchain Builders",
     images: ["/og-image.png"],
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({

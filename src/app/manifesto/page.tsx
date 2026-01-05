@@ -75,7 +75,7 @@ export default function ManifestoPage() {
                 .
               </motion.p>
               <motion.p className="text-lg" variants={textVariants}>
-                This year we put the names of 2,000+ onchain builders on Times
+                This year we put the names of 3,000+ onchain builders on Times
                 Square and created the first Verified Registry of Onchain
                 Builders.
               </motion.p>

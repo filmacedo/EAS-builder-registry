@@ -59,12 +59,11 @@ async function fetchFromEAS(query: string, network: Network) {
   }
 
   const result = await response.json();
-  console.log(`Response from ${network} network:`, result);
 
   if (!result || !result.data) {
     console.error(
       `Invalid response structure from ${network} network:`,
-      result
+      JSON.stringify(result, null, 2)
     );
     throw new Error(
       `Invalid response structure from EAS API on ${network}: missing result or data field`

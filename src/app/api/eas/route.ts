@@ -3,8 +3,27 @@ import { Network } from "@/types";
 
 export async function POST(request: Request) {
   try {
-    const { query, network }: { query: string; network: Network } =
-      await request.json();
+    // Check if request has a body
+    const contentType = request.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      return NextResponse.json(
+        { error: "Content-Type must be application/json" },
+        { status: 400 }
+      );
+    }
+
+    // Safely parse JSON body
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid JSON in request body" },
+        { status: 400 }
+      );
+    }
+
+    const { query, network }: { query: string; network: Network } = body;
 
     if (!query || !network) {
       return NextResponse.json(

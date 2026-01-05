@@ -225,8 +225,7 @@ function Header() {
         variants={itemVariants}
       >
         The first community-sourced directory that recognizes real builders via
-        onchain attestations. All builders were verified by trusted partners.
-        Next verification round in 2026.
+        onchain attestations. All builders verified by trusted partners.
       </motion.p>
       <motion.div className="flex gap-4" variants={itemVariants}>
         <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">

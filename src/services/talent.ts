@@ -19,8 +19,8 @@ async function fetchWithRetry<T>(
 }
 
 export async function getTalentScore(address: string): Promise<number | null> {
-  return fetchWithRetry(async () => {
-    try {
+  try {
+    return await fetchWithRetry(async () => {
       const response = await fetch(`/api/talent?address=${address}`, {
         method: "GET",
         headers: {
@@ -29,19 +29,17 @@ export async function getTalentScore(address: string): Promise<number | null> {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Return null instead of throwing - this is expected for addresses without Talent data
+        return null;
       }
 
       const data = await response.json();
       return data.score?.points || null;
-    } catch (error) {
-      console.warn(
-        `Error fetching Talent Protocol score for ${address}:`,
-        error
-      );
-      return null;
-    }
-  });
+    });
+  } catch {
+    // Silently fail - not all addresses have Talent Protocol data
+    return null;
+  }
 }
 
 export interface TalentProfile {
@@ -53,8 +51,8 @@ export interface TalentProfile {
 export async function getTalentProfile(
   address: string
 ): Promise<TalentProfile | null> {
-  return fetchWithRetry(async () => {
-    try {
+  try {
+    return await fetchWithRetry(async () => {
       const response = await fetch(`/api/talent/profile?address=${address}`, {
         method: "GET",
         headers: {
@@ -63,7 +61,8 @@ export async function getTalentProfile(
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Return null instead of throwing - this is expected for addresses without Talent data
+        return null;
       }
 
       const data = await response.json();
@@ -72,14 +71,11 @@ export async function getTalentProfile(
         display_name: data.profile?.display_name || null,
         image_url: data.profile?.image_url || null,
       };
-    } catch (error) {
-      console.warn(
-        `Error fetching Talent Protocol profile for ${address}:`,
-        error
-      );
-      return null;
-    }
-  });
+    });
+  } catch {
+    // Silently fail - not all addresses have Talent Protocol data
+    return null;
+  }
 }
 
 export async function getTalentDataBatch(

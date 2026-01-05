@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 export function Footer() {
   return (
     <footer className="w-full border-t mt-16 py-8">
@@ -38,33 +36,6 @@ export function Footer() {
             </p>
           </div>
 
-          {/* Links - Left aligned on mobile, right aligned on desktop */}
-          <div className="flex gap-6 w-full md:w-auto justify-start md:justify-end">
-            {/* <a
-              href="https://app.deform.cc/form/3c9a7879-2a22-426a-ab89-eba8c6055204"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-accent transition-colors"
-            >
-              Join as Builder
-            </a> */}
-            <a
-              href="https://talentprotocol.notion.site/buildersday2025-partners?pvs=4"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-accent transition-colors"
-            >
-              Become a Partner
-            </a>
-            <a
-              href="https://talentprotocol.notion.site/Builder-Registry-FAQ-1cbfc9bb5319805a9643c9c91f318d8d?pvs=4"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-accent transition-colors"
-            >
-              FAQ
-            </a>
-          </div>
         </div>
       </div>
     </footer>

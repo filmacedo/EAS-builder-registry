@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "export-builders": "tsx scripts/export-builders.ts"
+    "export-builders": "tsx scripts/export-builders.ts",
+    "test:talent": "tsx scripts/test-talent-api.ts"
   },
   "dependencies": {
     "@coinbase/onchainkit": "^0.38.7",
@@ -31,7 +32,7 @@
     "framer-motion": "^12.9.2",
     "lodash.debounce": "^4.0.8",
     "lucide-react": "^0.487.0",
-    "next": "15.2.4",
+    "next": "^15.5.9",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^3.1.0",
@@ -54,5 +55,10 @@
     "tailwindcss": "^4",
     "tsx": "^4.19.3",
     "typescript": "^5"
+  },
+  "overrides": {
+    "use-sync-external-store": "^1.2.2",
+    "cookie": "^0.7.0",
+    "tmp": "^0.2.4"
   }
 }
