@@ -49,6 +49,10 @@ export const metadata: Metadata = {
     description: "Verified Registry of Onchain Builders",
     images: ["/og-image.png"],
   },
+  other: {
+    "talentapp:project_verification":
+      "676468df5e79ee1394601d940123ce3ae7bd39d5abef5de8e4250dff39a533d0921549d6f75785de3f71257a94fb57aec3437e4b4ab0f9c7fd79a612c04f4993",
+  },
 };
 
 export const viewport: Viewport = {
