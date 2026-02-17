@@ -51,7 +51,7 @@ export const metadata: Metadata = {
   },
   other: {
     "talentapp:project_verification":
-      "676468df5e79ee1394601d940123ce3ae7bd39d5abef5de8e4250dff39a533d0921549d6f75785de3f71257a94fb57aec3437e4b4ab0f9c7fd79a612c04f4993",
+      "c233dca86bf7964bfa2951d64f415ac2b30e8d7865df80b1a3e87e5fbd3b176ed1ed72fcd8d76de2af0548d1e1e71addfd07cde83d8bbc17f48c5e458c0227e7",
   },
 };
 
