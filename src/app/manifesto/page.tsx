@@ -92,31 +92,57 @@ export default function ManifestoPage() {
             </motion.div>
           </TerminalWindow>
 
-          {/* Video with same width as containers */}
-          <motion.div
-            className="relative w-full aspect-video my-12"
-            initial={{ scale: 0.98, opacity: 0 }}
-            whileInView={{
-              scale: 1,
-              opacity: 1,
-              transition: {
-                duration: 0.5,
-                ease: [0.25, 0.1, 0.25, 1],
-              },
-            }}
-            viewport={{ once: true }}
-          >
-            <iframe
-              className="absolute top-0 left-0 w-full h-full rounded-lg"
-              src="https://www.youtube.com/embed/0cFFvqnlh0Q?si=hH9GyZi966_zzAvp"
-              title="YouTube video player"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              referrerPolicy="strict-origin-when-cross-origin"
-              allowFullScreen
-              aria-label="Builders Manifesto video"
-              loading="lazy"
-            />
-          </motion.div>
+          {/* Self-hosted + YouTube; same width as containers */}
+          <div className="my-12 flex flex-col gap-8">
+            <motion.div
+              className="relative w-full aspect-video"
+              initial={{ scale: 0.98, opacity: 0 }}
+              whileInView={{
+                scale: 1,
+                opacity: 1,
+                transition: {
+                  duration: 0.5,
+                  ease: [0.25, 0.1, 0.25, 1],
+                },
+              }}
+              viewport={{ once: true }}
+            >
+              <video
+                className="absolute inset-0 h-full w-full rounded-lg bg-black object-contain"
+                controls
+                playsInline
+                preload="metadata"
+                aria-label="Builders Day 2025"
+              >
+                <source src="/videos/builders-day-2025.mp4" type="video/mp4" />
+              </video>
+            </motion.div>
+
+            <motion.div
+              className="relative w-full aspect-video"
+              initial={{ scale: 0.98, opacity: 0 }}
+              whileInView={{
+                scale: 1,
+                opacity: 1,
+                transition: {
+                  duration: 0.5,
+                  ease: [0.25, 0.1, 0.25, 1],
+                },
+              }}
+              viewport={{ once: true }}
+            >
+              <iframe
+                className="absolute top-0 left-0 w-full h-full rounded-lg"
+                src="https://www.youtube.com/embed/0cFFvqnlh0Q?si=hH9GyZi966_zzAvp"
+                title="YouTube video player"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+                aria-label="Builders Manifesto video"
+                loading="lazy"
+              />
+            </motion.div>
+          </div>
 
           <TerminalWindow title="manifesto.txt - READING">
             <motion.h2
